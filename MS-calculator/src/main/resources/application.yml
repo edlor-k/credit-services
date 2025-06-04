@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: MS-calculator
+loan:
+  base-rate: 20.0
+  insurance-rate: 5.0
+  insurance-cost: 50000.0
+  salary-discount: 2.0
+
+  self-employed-increase: 2.0
+  business-owner-increase: 1.0
+
+  position-middle-discount: 2.0
+  position-top-discount: 3.0
+
+  marital-married-discount: 3.0
+  marital-divorced-increase: 1.0
+
+  gender-female-discount: 3.0
+  gender-male-discount: 3.0
+  gender-other-increase: 7.0
+
+
+
