@@ -196,8 +196,10 @@ public class CalculatorService {
         double upper = 1.0;
         double eps = 1e-7;
         double r = 0.0;
+        int iter = 0;
 
-        while ((upper - lower) > eps) {
+        while ((upper - lower) > eps && iter < 10000) {
+            iter++;
             r = (lower + upper) / 2.0;
             double npv = 0.0;
             for (PaymentScheduleElementDto payment : schedule) {
@@ -212,6 +214,6 @@ public class CalculatorService {
             }
         }
 
-        return BigDecimal.valueOf(r * 100).setScale(2, RoundingMode.HALF_UP);
+        return BigDecimal.valueOf(r * 100).setScale(3, RoundingMode.HALF_UP);
     }
 }

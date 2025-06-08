@@ -6,31 +6,34 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Информация о кредите")
 @Data
 @Builder
 public class CreditDto {
 
-    // сумма кредита
+    @Schema(description = "Сумма кредита", example = "1000000")
     private BigDecimal amount;
 
-    // срок кредита (в месяцах)
+    @Schema(description = "Срок кредита (в месяцах)", example = "36")
     private Integer term;
 
-    // ежемесячный платеж
+    @Schema(description = "Ежемесячный платёж", example = "32500.50")
     private BigDecimal monthlyPayment;
 
-    // ставка по кредиту
+    @Schema(description = "Процентная ставка", example = "12.5")
     private BigDecimal rate;
 
-    // полная стоимость кредита
+    @Schema(description = "Полная стоимость кредита", example = "1170000")
     private BigDecimal psk;
 
-    // наличие опции страховки
+    @Schema(description = "Страховка включена", example = "true")
     private Boolean isInsuranceEnabled;
 
-    // статус зарплатного клиента
+    @Schema(description = "Клиент является зарплатным", example = "false")
     private Boolean isSalaryClient;
 
-    // график платежей
+    @Schema(description = "График платежей")
     private List<PaymentScheduleElementDto> paymentSchedule;
 }
