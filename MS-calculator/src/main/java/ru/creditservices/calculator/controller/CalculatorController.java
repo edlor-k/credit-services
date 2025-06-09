@@ -2,6 +2,7 @@ package ru.creditservices.calculator.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -27,30 +28,34 @@ public class CalculatorController {
     private final CalculatorService calculatorService;
 
     @PostMapping("/offers")
-    @Operation(summary = "Получение предложений по кредиту",
-            description = "Возращает лист из 4 предложений по кредиту или отказ " +
-                    "на основе данных клиента и параметров кредита.")
+    @Operation(summary = "Get loan offers",
+            description = "Returns a list of 4 loan offers or a rejection based on client data and loan parameters.")
     public ResponseEntity<List<LoanOfferDto>> getLoanOffers(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "Данные для прескоринга",
-            required = true
+                    description = "Data for prescoring",
+                    required = true
             )
-            @RequestBody LoanStatementRequestDto request) {
-        log.info("Received loan statement request: {}", request);
-        return ResponseEntity.ok(calculatorService.prescoring(request));
+            @Valid @RequestBody LoanStatementRequestDto request) {
+        log.info("Prescoring input data: {}", request);
+        List<LoanOfferDto> offers = calculatorService.prescoring(request);
+        log.info("Intermediate result (number of offers): {}", offers.size());
+        log.info("Generated loan offers: {}", offers);
+        return ResponseEntity.ok(offers);
     }
 
     @PostMapping("/calc")
-    @Operation(summary = "Расчет кредита, основанный на данных клиента",
-            description = "Возвращает информацию о кредите, " +
-                    "включая сумму, срок, ежемесячный платёж и другие параметры.")
+    @Operation(summary = "Credit calculation based on client data",
+            description = "Returns credit information including amount, term, monthly payment, and other parameters.")
     public ResponseEntity<CreditDto> calculateCredit(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Данные клиента для расчёта кредита",
+                    description = "Client data for credit calculation",
                     required = true
             )
-            @RequestBody ScoringDataDto request) {
-        log.info("Received scoring data: {}", request);
-        return ResponseEntity.ok(calculatorService.calculate(request));
+            @Valid @RequestBody ScoringDataDto request) {
+        log.info("Credit calculation input data: {}", request);
+        CreditDto credit = calculatorService.calculate(request);
+        log.info("Intermediate result (monthly payment): {}", credit.getMonthlyPayment());
+        log.info("Credit calculation result: {}", credit);
+        return ResponseEntity.ok(credit);
     }
 }

@@ -40,20 +40,23 @@ public class CalculatorService {
         BigDecimal requestedAmount = request.getAmount();
         Integer term = request.getTerm();
 
-        BigDecimal rate;
-        BigDecimal totalAmount;
-        BigDecimal monthlyPayment;
+        log.info("Prescoring step: baseRate={}, insuranceRate={}, insuranceCost={}, salaryDiscount={}", baseRate, insuranceRate, insuranceCost, salaryDiscount);
 
         for (boolean isInsuranceEnabled : new boolean[]{true, false}) {
             for (boolean isSalaryClient : new boolean[]{true, false}) {
-                rate = baseRate;
-                totalAmount = requestedAmount;
+                BigDecimal rate = baseRate;
+                BigDecimal totalAmount = requestedAmount;
+
+                log.info("Prescoring step: isInsuranceEnabled={}, isSalaryClient={}", isInsuranceEnabled, isSalaryClient);
+
                 if (isInsuranceEnabled) {
                     rate = rate.subtract(insuranceRate);
                     totalAmount = totalAmount.add(insuranceCost);
+                    log.info("Prescoring step: Insurance enabled. New rate={}, totalAmount={}", rate, totalAmount);
                 }
                 if (isSalaryClient) {
                     rate = rate.subtract(salaryDiscount);
+                    log.info("Prescoring step: Salary client. New rate={}", rate);
                 }
 
                 BigDecimal monthlyRate = rate.divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP)
@@ -62,8 +65,9 @@ public class CalculatorService {
                 BigDecimal denominator = BigDecimal.ONE.subtract(
                         BigDecimal.ONE.add(monthlyRate).pow(-term, MathContext.DECIMAL128)
                 );
-                monthlyPayment = numerator.divide(denominator, 2, RoundingMode.HALF_UP);
+                BigDecimal monthlyPayment = numerator.divide(denominator, 2, RoundingMode.HALF_UP);
 
+                log.info("Prescoring step: Calculated monthlyPayment={}, monthlyRate={}", monthlyPayment, monthlyRate);
 
                 offerList.add(LoanOfferDto.builder()
                         .statementId(uuid)
@@ -75,8 +79,9 @@ public class CalculatorService {
                         .isInsuranceEnabled(isInsuranceEnabled)
                         .isSalaryClient(isSalaryClient)
                         .build());
-                log.info("Generated loan offer: with insurance: {}, salary client: {}",
-                        isInsuranceEnabled, isSalaryClient);
+
+                log.info("Generated loan offer: with insurance: {}, salary client: {}, rate: {}, totalAmount: {}, monthlyPayment: {}",
+                        isInsuranceEnabled, isSalaryClient, rate, totalAmount, monthlyPayment);
             }
         }
 
@@ -86,81 +91,93 @@ public class CalculatorService {
     }
 
     public CreditDto calculate(@Valid ScoringDataDto scoringData) {
+        log.info("Credit calculation request: {}", scoringData);
         BigDecimal rate = loanProperties.getBaseRate();
         BigDecimal amount = scoringData.getAmount();
         BigDecimal totalAmount = amount;
         int term = scoringData.getTerm();
         int clientAge = Period.between(scoringData.getBirthdate(), LocalDate.now()).getYears();
-        switch(scoringData.getEmployment().getEmploymentStatus()) {
-            case SELF_EMPLOYED:
+
+        log.info("Calculation step: Initial rate={}, amount={}, term={}, clientAge={}", rate, amount, term, clientAge);
+
+        switch (scoringData.getEmployment().getEmploymentStatus()) {
+            case SELF_EMPLOYED -> {
                 rate = rate.add(loanProperties.getSelfEmployedIncrease());
-                break;
-            case BUSINESS_OWNER:
+                log.info("Calculation step: Employment status SELF_EMPLOYED. New rate={}", rate);
+            }
+            case BUSINESS_OWNER -> {
                 rate = rate.add(loanProperties.getBusinessOwnerIncrease());
-                break;
-            default:
-                break;
+                log.info("Calculation step: Employment status BUSINESS_OWNER. New rate={}", rate);
+            }
         }
+
         switch (scoringData.getEmployment().getPosition()) {
-            case MIDDLE:
+            case MIDDLE -> {
                 rate = rate.subtract(loanProperties.getPositionMiddleDiscount());
-                break;
-            case SENIOR:
+                log.info("Calculation step: Position MIDDLE. New rate={}", rate);
+            }
+            case SENIOR -> {
                 rate = rate.subtract(loanProperties.getPositionTopDiscount());
-                break;
-            default:
-                break;
+                log.info("Calculation step: Position SENIOR. New rate={}", rate);
+            }
         }
+
         switch (scoringData.getMaritalStatus()) {
-            case MARRIED:
+            case MARRIED -> {
                 rate = rate.subtract(loanProperties.getMaritalMarriedDiscount());
-                break;
-            case DIVORCED:
+                log.info("Calculation step: Marital status MARRIED. New rate={}", rate);
+            }
+            case DIVORCED -> {
                 rate = rate.add(loanProperties.getMaritalDivorcedIncrease());
-                break;
-            default:
-                break;
+                log.info("Calculation step: Marital status DIVORCED. New rate={}", rate);
+            }
         }
-        if (scoringData.getGender() == Gender.MALE && clientAge >= 30 && clientAge <= 55 ) {
+
+        if (scoringData.getGender() == Gender.MALE && clientAge >= 30 && clientAge <= 55) {
             rate = rate.subtract(loanProperties.getGenderMaleDiscount());
+            log.info("Calculation step: Gender MALE, age in range. New rate={}", rate);
         } else if (scoringData.getGender() == Gender.FEMALE && clientAge >= 32 && clientAge <= 60) {
             rate = rate.subtract(loanProperties.getGenderFemaleDiscount());
+            log.info("Calculation step: Gender FEMALE, age in range. New rate={}", rate);
         } else if (scoringData.getGender() == Gender.OTHER) {
             rate = rate.add(loanProperties.getGenderOtherIncrease());
+            log.info("Calculation step: Gender OTHER. New rate={}", rate);
         }
+
         if (scoringData.getIsInsuranceEnabled()) {
             totalAmount = totalAmount.add(loanProperties.getInsuranceCost());
             rate = rate.subtract(loanProperties.getInsuranceRate());
+            log.info("Calculation step: Insurance enabled. New totalAmount={}, new rate={}", totalAmount, rate);
         }
 
-        List<PaymentScheduleElementDto> schedule = new ArrayList<>();
-        BigDecimal remainingDebt = totalAmount;
-        LocalDate issueDate = LocalDate.now();
-        BigDecimal ratePerYear = rate.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-
-        BigDecimal monthlyRate = ratePerYear.divide(BigDecimal.valueOf(12), 10, RoundingMode.HALF_UP); // 0.011667
-
+        BigDecimal monthlyRate = rate.divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP)
+                .divide(BigDecimal.valueOf(12), 10, RoundingMode.HALF_UP);
         BigDecimal numerator = totalAmount.multiply(monthlyRate);
         BigDecimal denominator = BigDecimal.ONE.subtract(
                 BigDecimal.ONE.add(monthlyRate).pow(-term, MathContext.DECIMAL128)
         );
-
         BigDecimal monthlyPayment = numerator.divide(denominator, 2, RoundingMode.HALF_UP);
+
+        log.info("Calculation step: Calculated monthlyPayment={}, monthlyRate={}", monthlyPayment, monthlyRate);
+
+        List<PaymentScheduleElementDto> schedule = new ArrayList<>();
+        BigDecimal remainingDebt = totalAmount;
+        LocalDate issueDate = LocalDate.now();
 
         for (int i = 1; i <= term; i++) {
             LocalDate paymentDate = issueDate.plusMonths(i);
 
             BigDecimal interestPayment = remainingDebt.multiply(monthlyRate)
                     .setScale(2, RoundingMode.HALF_UP);
-
             BigDecimal debtPayment = monthlyPayment.subtract(interestPayment)
                     .setScale(2, RoundingMode.HALF_UP);
 
-
-            remainingDebt = remainingDebt
-                    .subtract(debtPayment)
+            remainingDebt = remainingDebt.subtract(debtPayment)
                     .max(BigDecimal.ZERO)
                     .setScale(2, RoundingMode.HALF_UP);
+
+            log.info("Schedule step: Payment #{}: date={}, totalPayment={}, interestPayment={}, debtPayment={}, remainingDebt={}",
+                    i, paymentDate, monthlyPayment, interestPayment, debtPayment, remainingDebt);
 
             schedule.add(PaymentScheduleElementDto.builder()
                     .number(i)
@@ -175,7 +192,8 @@ public class CalculatorService {
         BigDecimal psk = calculatePSK(schedule, scoringData.getAmount(), issueDate);
         log.info("Credit calculation completed. Rate: {}, Monthly Payment: {}, PSK: {}",
                 rate, monthlyPayment, psk);
-        return CreditDto.builder()
+
+        CreditDto creditDto = CreditDto.builder()
                 .amount(amount)
                 .term(term)
                 .monthlyPayment(monthlyPayment)
@@ -185,13 +203,15 @@ public class CalculatorService {
                 .isSalaryClient(scoringData.getIsSalaryClient())
                 .paymentSchedule(schedule)
                 .build();
+
+        log.info("Credit calculation result: {}", creditDto);
+
+        return creditDto;
     }
 
-    private BigDecimal calculatePSK(
-            List<PaymentScheduleElementDto> schedule,
-            BigDecimal amountIssued,
-            LocalDate startDate
-    ) {
+    private BigDecimal calculatePSK(List<PaymentScheduleElementDto> schedule,
+                                    BigDecimal amountIssued,
+                                    LocalDate startDate) {
         double lower = 0.0001;
         double upper = 1.0;
         double eps = 1e-7;
