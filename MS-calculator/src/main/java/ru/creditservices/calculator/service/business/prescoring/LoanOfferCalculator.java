@@ -2,7 +2,7 @@ package ru.creditservices.calculator.service.business.prescoring;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.creditservices.calculator.dto.LoanOfferDto;
+import ru.creditservices.calculator.model.entity.LoanOfferEntity;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -13,7 +13,7 @@ import java.util.UUID;
 @Component
 public class LoanOfferCalculator {
 
-    public LoanOfferDto buildLoanOffer(
+    public LoanOfferEntity buildLoanOffer(
             UUID uuid,
             BigDecimal requestedAmount,
             Integer term,
@@ -53,7 +53,7 @@ public class LoanOfferCalculator {
         log.info("[LoanOfferCalculator] Result: rate={}, totalAmount={}, monthlyPayment={}",
                 rate, totalAmount, monthlyPayment);
 
-        LoanOfferDto offer = LoanOfferDto.builder()
+        LoanOfferEntity offer = LoanOfferEntity.builder()
                 .statementId(uuid)
                 .requestedAmount(requestedAmount)
                 .totalAmount(totalAmount)

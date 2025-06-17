@@ -1,7 +1,7 @@
 package ru.creditservices.calculator.service.business.schedule;
 
 import org.springframework.stereotype.Component;
-import ru.creditservices.calculator.dto.PaymentScheduleElementDto;
+import ru.creditservices.calculator.model.entity.PaymentScheduleElementEntity;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -12,12 +12,12 @@ import java.util.List;
 @Component
 public class PaymentScheduleCalculator {
 
-    public List<PaymentScheduleElementDto> calculateSchedule(
+    public List<PaymentScheduleElementEntity> calculateSchedule(
             BigDecimal totalAmount, int term, BigDecimal rate, LocalDate startDate, BigDecimal monthlyPayment) {
 
         BigDecimal monthlyRate = rate.divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP)
                 .divide(BigDecimal.valueOf(12), 10, RoundingMode.HALF_UP);
-        List<PaymentScheduleElementDto> schedule = new ArrayList<>();
+        List<PaymentScheduleElementEntity> schedule = new ArrayList<>();
         BigDecimal remainingDebt = totalAmount;
 
         for (int i = 1; i <= term; i++) {
@@ -26,7 +26,7 @@ public class PaymentScheduleCalculator {
             BigDecimal debtPayment = monthlyPayment.subtract(interestPayment).setScale(2, RoundingMode.HALF_UP);
             remainingDebt = remainingDebt.subtract(debtPayment).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
 
-            schedule.add(PaymentScheduleElementDto.builder()
+            schedule.add(PaymentScheduleElementEntity.builder()
                     .number(i)
                     .date(paymentDate)
                     .totalPayment(monthlyPayment)

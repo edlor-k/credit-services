@@ -1,12 +1,15 @@
 package ru.creditservices.calculator.service.impl;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.creditservices.calculator.dto.CreditDto;
-import ru.creditservices.calculator.dto.PaymentScheduleElementDto;
 import ru.creditservices.calculator.dto.ScoringDataDto;
+import ru.creditservices.calculator.mapper.CreditMapper;
+import ru.creditservices.calculator.mapper.ScoringDataMapper;
+import ru.creditservices.calculator.model.entity.CreditEntity;
+import ru.creditservices.calculator.model.entity.PaymentScheduleElementEntity;
+import ru.creditservices.calculator.model.entity.ScoringDataEntity;
 import ru.creditservices.calculator.service.api.IScoringService;
 import ru.creditservices.calculator.service.business.scoring.ScoringCalculator;
 import ru.creditservices.calculator.service.business.scoring.ScoringValidator;
@@ -27,9 +30,14 @@ public class ScoringService implements IScoringService {
     private final ScoringCalculator scoringCalculator;
     private final PaymentScheduleCalculator paymentScheduleCalculator;
 
+    private final ScoringDataMapper scoringDataMapper;
+    private final CreditMapper creditMapper;
+
     @Override
-    public CreditDto getFinalCreditInfo(@Valid ScoringDataDto scoringData) {
-        log.info("[ScoringService] Credit calculation request: {}", scoringData);
+    public CreditDto getFinalCreditInfo(ScoringDataDto data) {
+        log.info("[ScoringService] Credit calculation request: {}", data);
+
+        ScoringDataEntity scoringData = scoringDataMapper.toEntity(data);
 
         try {
             scoringValidator.validate(scoringData);
@@ -60,7 +68,7 @@ public class ScoringService implements IScoringService {
         log.info("[ScoringService] Calculated monthly payment: {}", monthlyPayment);
 
         LocalDate issueDate = LocalDate.now();
-        List<PaymentScheduleElementDto> schedule = paymentScheduleCalculator.calculateSchedule(
+        List<PaymentScheduleElementEntity> schedule = paymentScheduleCalculator.calculateSchedule(
                 totalAmount, term, finalRate, issueDate, monthlyPayment
         );
         log.info("[ScoringService] Payment schedule generated ({} entries)", schedule.size());
@@ -68,7 +76,7 @@ public class ScoringService implements IScoringService {
         BigDecimal psk = PskUtil.calculatePSK(schedule, scoringData.getAmount(), issueDate);
         log.info("[ScoringService] Calculated PSK: {}", psk);
 
-        CreditDto creditDto = CreditDto.builder()
+        CreditEntity creditEntity = CreditEntity.builder()
                 .amount(scoringData.getAmount())
                 .term(term)
                 .monthlyPayment(monthlyPayment)
@@ -79,8 +87,8 @@ public class ScoringService implements IScoringService {
                 .paymentSchedule(schedule)
                 .build();
 
-        log.info("[ScoringService] Credit calculation result: {}", creditDto);
+        log.info("[ScoringService] Credit calculation result: {}", creditEntity);
 
-        return creditDto;
+        return creditMapper.toDto(creditEntity);
     }
 }

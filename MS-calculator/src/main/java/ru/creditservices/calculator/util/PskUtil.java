@@ -1,6 +1,6 @@
 package ru.creditservices.calculator.util;
 
-import ru.creditservices.calculator.dto.PaymentScheduleElementDto;
+import ru.creditservices.calculator.model.entity.PaymentScheduleElementEntity;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -9,7 +9,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 public class PskUtil {
-    public static BigDecimal calculatePSK(List<PaymentScheduleElementDto> schedule,
+    public static BigDecimal calculatePSK(List<PaymentScheduleElementEntity> schedule,
                                     BigDecimal amountIssued,
                                     LocalDate startDate) {
         double lower = 0.0001;
@@ -22,7 +22,7 @@ public class PskUtil {
             iter++;
             r = (lower + upper) / 2.0;
             double npv = 0.0;
-            for (PaymentScheduleElementDto payment : schedule) {
+            for (PaymentScheduleElementEntity payment : schedule) {
                 long days = ChronoUnit.DAYS.between(startDate, payment.getDate());
                 double discount = Math.pow(1 + r, days / 365.0);
                 npv += payment.getTotalPayment().doubleValue() / discount;

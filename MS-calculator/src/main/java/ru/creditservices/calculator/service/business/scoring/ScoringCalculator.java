@@ -2,7 +2,7 @@ package ru.creditservices.calculator.service.business.scoring;
 
 import org.springframework.stereotype.Component;
 import ru.creditservices.calculator.config.LoanProperties;
-import ru.creditservices.calculator.dto.ScoringDataDto;
+import ru.creditservices.calculator.model.entity.ScoringDataEntity;
 import ru.creditservices.calculator.model.enums.*;
 
 import java.math.BigDecimal;
@@ -22,7 +22,7 @@ public class ScoringCalculator {
         return loanProperties.getInsuranceCost();
     }
 
-    public BigDecimal calculateFinalRate(ScoringDataDto data) {
+    public BigDecimal calculateFinalRate(ScoringDataEntity data) {
         BigDecimal rate = loanProperties.getBaseRate();
 
         switch (data.getEmployment().getEmploymentStatus()) {

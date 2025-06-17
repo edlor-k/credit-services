@@ -1,8 +1,8 @@
 package ru.creditservices.calculator.service.business.scoring;
 
 import org.springframework.stereotype.Component;
-import ru.creditservices.calculator.dto.ScoringDataDto;
 import ru.creditservices.calculator.exception.ScoringException;
+import ru.creditservices.calculator.model.entity.ScoringDataEntity;
 import ru.creditservices.calculator.model.enums.EmploymentStatus;
 
 import java.math.BigDecimal;
@@ -13,7 +13,7 @@ import static ru.creditservices.calculator.util.ErrorMessagesUtil.*;
 
 @Component
 public class ScoringValidator {
-    public void validate(ScoringDataDto data) {
+    public void validate(ScoringDataEntity data) {
         if (data.getBirthdate() == null) {
             throw new ScoringException(SCORING_BIRTHDATE_REQUIRED);
         }

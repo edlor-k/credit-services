@@ -7,6 +7,10 @@ import org.springframework.stereotype.Service;
 import ru.creditservices.calculator.config.LoanProperties;
 import ru.creditservices.calculator.dto.LoanOfferDto;
 import ru.creditservices.calculator.dto.LoanStatementRequestDto;
+import ru.creditservices.calculator.mapper.LoanOfferMapper;
+import ru.creditservices.calculator.mapper.LoanStatementMapper;
+import ru.creditservices.calculator.model.entity.LoanOfferEntity;
+import ru.creditservices.calculator.model.entity.LoanStatementEntity;
 import ru.creditservices.calculator.service.api.ILoanService;
 import ru.creditservices.calculator.service.business.prescoring.LoanOfferCalculator;
 import ru.creditservices.calculator.service.business.prescoring.LoanPrescoringValidator;
@@ -26,12 +30,18 @@ public class LoanService implements ILoanService {
     private final LoanPrescoringValidator prescoringValidator;
     private final LoanOfferCalculator loanOfferCalculator;
 
+    private final LoanStatementMapper statementMapper;
+    private final LoanOfferMapper offerMapper;
+
     @Override
     public List<LoanOfferDto> getLoanOffers(@Valid LoanStatementRequestDto request) {
         log.info("[LoanService] Start offer calculation. Input: {}", request);
-        prescoringValidator.validate(request);
 
-        List<LoanOfferDto> offerList = new ArrayList<>(4);
+        LoanStatementEntity statement = statementMapper.toEntity(request);
+
+        prescoringValidator.validate(statement);
+
+        List<LoanOfferEntity> offerList = new ArrayList<>(4);
         UUID uuid = UUID.randomUUID();
 
         BigDecimal baseRate = loanProperties.getBaseRate();
@@ -39,8 +49,8 @@ public class LoanService implements ILoanService {
         BigDecimal insuranceCost = loanProperties.getInsuranceCost();
         BigDecimal salaryDiscount = loanProperties.getSalaryDiscount();
 
-        BigDecimal requestedAmount = request.getAmount();
-        Integer term = request.getTerm();
+        BigDecimal requestedAmount = statement.getAmount();
+        Integer term = statement.getTerm();
 
         log.info("[LoanService] Calculation params: " +
                         "baseRate={}, insuranceRate={}, insuranceCost={}, salaryDiscount={}",
@@ -51,7 +61,7 @@ public class LoanService implements ILoanService {
                 log.info("[LoanService] Combination: isInsuranceEnabled={}, isSalaryClient={}",
                         isInsuranceEnabled, isSalaryClient);
 
-                LoanOfferDto offer = loanOfferCalculator.buildLoanOffer(
+                LoanOfferEntity offer = loanOfferCalculator.buildLoanOffer(
                         uuid, requestedAmount, term,
                         baseRate, insuranceRate, insuranceCost, salaryDiscount,
                         isInsuranceEnabled, isSalaryClient
@@ -61,8 +71,9 @@ public class LoanService implements ILoanService {
             }
         }
 
-        offerList.sort(Comparator.comparing(LoanOfferDto::getRate));
+        offerList.sort(Comparator.comparing(LoanOfferEntity::getRate));
         log.info("[LoanService] Final sorted offer list: {}", offerList);
-        return offerList;
+
+        return offerMapper.toDto(offerList);
     }
 }

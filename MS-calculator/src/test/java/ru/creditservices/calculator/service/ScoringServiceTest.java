@@ -4,6 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.creditservices.calculator.dto.*;
+import ru.creditservices.calculator.mapper.CreditMapper;
+import ru.creditservices.calculator.mapper.ScoringDataMapper;
 import ru.creditservices.calculator.model.enums.*;
 import ru.creditservices.calculator.service.business.scoring.ScoringCalculator;
 import ru.creditservices.calculator.service.business.scoring.ScoringValidator;
@@ -27,10 +29,15 @@ class ScoringServiceTest {
         ScoringCalculator scoringCalculator = mock(ScoringCalculator.class);
         PaymentScheduleCalculator paymentScheduleCalculator = mock(PaymentScheduleCalculator.class);
 
+        CreditMapper creditMapper = mock(CreditMapper.class);
+        ScoringDataMapper scoringDataMapper = mock(ScoringDataMapper.class);
+
         scoringService = new ScoringService(
                 scoringValidator,
                 scoringCalculator,
-                paymentScheduleCalculator
+                paymentScheduleCalculator,
+                scoringDataMapper,
+                creditMapper
         );
     }
 

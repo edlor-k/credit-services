@@ -2,8 +2,8 @@ package ru.creditservices.calculator.service.business.prescoring;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.creditservices.calculator.dto.LoanStatementRequestDto;
 import ru.creditservices.calculator.exception.LoanPrescoringException;
+import ru.creditservices.calculator.model.entity.LoanStatementEntity;
 
 import static ru.creditservices.calculator.util.RegexPatternsUtil.*;
 
@@ -22,53 +22,53 @@ public class LoanPrescoringValidator {
     private static final Pattern PASSPORT_SERIES_PATTERN = Pattern.compile(PASSPORT_SERIES);
     private static final Pattern PASSPORT_NUMBER_PATTERN = Pattern.compile(PASSPORT_NUMBER);
 
-    public void validate(LoanStatementRequestDto dto) {
-        log.info("[LoanPrescoringValidator] Start validation: {}", dto);
+    public void validate(LoanStatementEntity entity) {
+        log.info("[LoanPrescoringValidator] Start validation: {}", entity);
 
-        if (!NAME_PATTERN.matcher(dto.getFirstName()).matches()) {
-            log.warn("[LoanPrescoringValidator] Invalid firstName: {}", dto.getFirstName());
+        if (!NAME_PATTERN.matcher(entity.getFirstName()).matches()) {
+            log.warn("[LoanPrescoringValidator] Invalid firstName: {}", entity.getFirstName());
             throw new LoanPrescoringException(PRESCORING_FIRSTNAME_INVALID);
         }
-        if (!NAME_PATTERN.matcher(dto.getLastName()).matches()) {
-            log.warn("[LoanPrescoringValidator] Invalid lastName: {}", dto.getLastName());
+        if (!NAME_PATTERN.matcher(entity.getLastName()).matches()) {
+            log.warn("[LoanPrescoringValidator] Invalid lastName: {}", entity.getLastName());
             throw new LoanPrescoringException(PRESCORING_LASTNAME_INVALID);
         }
-        if (dto.getMiddleName() != null && !dto.getMiddleName().isEmpty()) {
-            if (!NAME_PATTERN.matcher(dto.getMiddleName()).matches()) {
-                log.warn("[LoanPrescoringValidator] Invalid middleName: {}", dto.getMiddleName());
+        if (entity.getMiddleName() != null && !entity.getMiddleName().isEmpty()) {
+            if (!NAME_PATTERN.matcher(entity.getMiddleName()).matches()) {
+                log.warn("[LoanPrescoringValidator] Invalid middleName: {}", entity.getMiddleName());
                 throw new LoanPrescoringException(PRESCORING_MIDDLENAME_INVALID);
             }
         }
-        if (dto.getAmount() == null || dto.getAmount().longValue() < 20000) {
-            log.warn("[LoanPrescoringValidator] Invalid amount: {}", dto.getAmount());
+        if (entity.getAmount() == null || entity.getAmount().longValue() < 20000) {
+            log.warn("[LoanPrescoringValidator] Invalid amount: {}", entity.getAmount());
             throw new LoanPrescoringException(PRESCORING_AMOUNT_INVALID);
         }
-        if (dto.getTerm() == null || dto.getTerm() < 6) {
-            log.warn("[LoanPrescoringValidator] Invalid term: {}", dto.getTerm());
+        if (entity.getTerm() == null || entity.getTerm() < 6) {
+            log.warn("[LoanPrescoringValidator] Invalid term: {}", entity.getTerm());
             throw new LoanPrescoringException(PRESCORING_TERM_INVALID);
         }
-        if (dto.getBirthdate() == null) {
+        if (entity.getBirthdate() == null) {
             log.warn("[LoanPrescoringValidator] Birthdate is null");
             throw new LoanPrescoringException(PRESCORING_BIRTHDATE_REQUIRED);
         }
-        int age = Period.between(dto.getBirthdate(), LocalDate.now()).getYears();
+        int age = Period.between(entity.getBirthdate(), LocalDate.now()).getYears();
         if (age < 18) {
-            log.warn("[LoanPrescoringValidator] Too young (age {}): {}", age, dto.getBirthdate());
+            log.warn("[LoanPrescoringValidator] Too young (age {}): {}", age, entity.getBirthdate());
             throw new LoanPrescoringException(PRESCORING_AGE_INVALID);
         }
-        if (dto.getEmail() == null || !EMAIL_PATTERN.matcher(dto.getEmail()).matches()) {
-            log.warn("[LoanPrescoringValidator] Invalid email: {}", dto.getEmail());
+        if (entity.getEmail() == null || !EMAIL_PATTERN.matcher(entity.getEmail()).matches()) {
+            log.warn("[LoanPrescoringValidator] Invalid email: {}", entity.getEmail());
             throw new LoanPrescoringException(PRESCORING_EMAIL_INVALID);
         }
-        if (dto.getPassportSeries() == null || !PASSPORT_SERIES_PATTERN.matcher(dto.getPassportSeries()).matches()) {
-            log.warn("[LoanPrescoringValidator] Invalid passportSeries: {}", dto.getPassportSeries());
+        if (entity.getPassportSeries() == null || !PASSPORT_SERIES_PATTERN.matcher(entity.getPassportSeries()).matches()) {
+            log.warn("[LoanPrescoringValidator] Invalid passportSeries: {}", entity.getPassportSeries());
             throw new LoanPrescoringException(PRESCORING_PASSPORT_SERIES_INVALID);
         }
-        if (dto.getPassportNumber() == null || !PASSPORT_NUMBER_PATTERN.matcher(dto.getPassportNumber()).matches()) {
-            log.warn("[LoanPrescoringValidator] Invalid passportNumber: {}", dto.getPassportNumber());
+        if (entity.getPassportNumber() == null || !PASSPORT_NUMBER_PATTERN.matcher(entity.getPassportNumber()).matches()) {
+            log.warn("[LoanPrescoringValidator] Invalid passportNumber: {}", entity.getPassportNumber());
             throw new LoanPrescoringException(PRESCORING_PASSPORT_NUMBER_INVALID);
         }
 
-        log.info("[LoanPrescoringValidator] Validation PASSED for: {}", dto);
+        log.info("[LoanPrescoringValidator] Validation PASSED for: {}", entity);
     }
 }
