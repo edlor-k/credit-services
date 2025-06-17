@@ -14,7 +14,8 @@ import ru.creditservices.calculator.dto.CreditDto;
 import ru.creditservices.calculator.dto.LoanOfferDto;
 import ru.creditservices.calculator.dto.LoanStatementRequestDto;
 import ru.creditservices.calculator.dto.ScoringDataDto;
-import ru.creditservices.calculator.service.CalculatorService;
+import ru.creditservices.calculator.service.api.ILoanService;
+import ru.creditservices.calculator.service.api.IScoringService;
 
 import java.util.List;
 
@@ -25,37 +26,33 @@ import java.util.List;
 @Tag(name="Calculator", description = "Prescoring and credit calculation API")
 public class CalculatorController {
 
-    private final CalculatorService calculatorService;
+    private final ILoanService loanService;
+    private final IScoringService scoringService;
 
     @PostMapping("/offers")
     @Operation(summary = "Get loan offers",
-            description = "Returns a list of 4 loan offers or a rejection based on client data and loan parameters.")
+            description = "Returns a list of 4 loan offers or a rejection based on " +
+                    "client data and loan parameters.")
     public ResponseEntity<List<LoanOfferDto>> getLoanOffers(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Data for prescoring",
-                    required = true
-            )
             @Valid @RequestBody LoanStatementRequestDto request) {
-        log.info("Prescoring input data: {}", request);
-        List<LoanOfferDto> offers = calculatorService.prescoring(request);
-        log.info("Intermediate result (number of offers): {}", offers.size());
-        log.info("Generated loan offers: {}", offers);
+        log.info("[CalculatorController] Prescoring input data: {}", request);
+        List<LoanOfferDto> offers = loanService.getLoanOffers(request);
+        log.info("[CalculatorController] Intermediate result (number of offers): {}", offers.size());
+        log.info("[CalculatorController] Generated loan offers: {}", offers);
         return ResponseEntity.ok(offers);
     }
 
     @PostMapping("/calc")
     @Operation(summary = "Credit calculation based on client data",
-            description = "Returns credit information including amount, term, monthly payment, and other parameters.")
+            description = "Returns credit information including amount, " +
+                    "term, monthly payment, and other parameters.")
     public ResponseEntity<CreditDto> calculateCredit(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Client data for credit calculation",
-                    required = true
-            )
             @Valid @RequestBody ScoringDataDto request) {
-        log.info("Credit calculation input data: {}", request);
-        CreditDto credit = calculatorService.calculate(request);
-        log.info("Intermediate result (monthly payment): {}", credit.getMonthlyPayment());
-        log.info("Credit calculation result: {}", credit);
+        log.info("[CalculatorController] Credit calculation input data: {}", request);
+        CreditDto credit = scoringService.getFinalCreditInfo(request);
+        log.info("[CalculatorController] Intermediate result (monthly payment): {}",
+                credit.getMonthlyPayment());
+        log.info("[CalculatorController] Credit calculation result: {}", credit);
         return ResponseEntity.ok(credit);
     }
 }

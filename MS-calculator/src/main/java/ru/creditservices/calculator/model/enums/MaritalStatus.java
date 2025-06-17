@@ -6,10 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum MaritalStatus {
-    MARRIED("Женат/Замужем"),
-    SINGLE("Холост/Не замужем"),
-    DIVORCED("Разведен/Разведена"),
-    WIDOWED("Вдовец/Вдова");
-
-    public final String maritalStatusDescription;
+    MARRIED,
+    SINGLE,
+    DIVORCED
 }

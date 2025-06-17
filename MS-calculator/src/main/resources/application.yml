@@ -1,3 +1,5 @@
+server:
+  port: 9010
 spring:
   application:
     name: MS-calculator
@@ -19,6 +21,3 @@ loan:
   gender-female-discount: 3.0
   gender-male-discount: 3.0
   gender-other-increase: 7.0
-
-
-

@@ -13,7 +13,8 @@ import ru.creditservices.calculator.dto.*;
 import ru.creditservices.calculator.model.enums.EmploymentStatus;
 import ru.creditservices.calculator.model.enums.Gender;
 import ru.creditservices.calculator.model.enums.MaritalStatus;
-import ru.creditservices.calculator.service.CalculatorService;
+import ru.creditservices.calculator.service.impl.LoanService;
+import ru.creditservices.calculator.service.impl.ScoringService;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -32,7 +33,10 @@ class CalculatorControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private CalculatorService calculatorService;
+    private LoanService loanService;
+
+    @MockitoBean
+    private ScoringService scoringService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -92,7 +96,7 @@ class CalculatorControllerTest {
         }
 
         offers.sort(Comparator.comparing(LoanOfferDto::getRate));
-        when(calculatorService.prescoring(Mockito.eq(request))).thenReturn(offers);
+        when(loanService.getLoanOffers(Mockito.eq(request))).thenReturn(offers);
 
         mockMvc.perform(post("/calculator/offers")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -181,7 +185,7 @@ class CalculatorControllerTest {
                 .paymentSchedule(Collections.emptyList())
                 .build();
 
-        when(calculatorService.calculate(Mockito.eq(request))).thenReturn(response);
+        when(scoringService.getFinalCreditInfo(Mockito.eq(request))).thenReturn(response);
 
         mockMvc.perform(post("/calculator/calc")
                         .contentType(MediaType.APPLICATION_JSON)

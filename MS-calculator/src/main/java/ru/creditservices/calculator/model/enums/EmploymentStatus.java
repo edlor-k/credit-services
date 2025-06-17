@@ -6,12 +6,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum EmploymentStatus {
-    EMPLOYED("Работающий"),
-    UNEMPLOYED("Безработный"),
-    SELF_EMPLOYED("Самозанятый"),
-    BUSINESS_OWNER("Владелец бизнеса"),
-    RETIRED("Пенсионер"),
-    STUDENT("Студент");
+    EMPLOYED,
+    UNEMPLOYED,
+    SELF_EMPLOYED,
+    BUSINESS_OWNER
 
-    public final String employmentStatusDescription;
 }
