@@ -14,8 +14,8 @@ import ru.creditservices.calculator.dto.CreditDto;
 import ru.creditservices.calculator.dto.LoanOfferDto;
 import ru.creditservices.calculator.dto.LoanStatementRequestDto;
 import ru.creditservices.calculator.dto.ScoringDataDto;
-import ru.creditservices.calculator.service.api.ILoanService;
-import ru.creditservices.calculator.service.api.IScoringService;
+import ru.creditservices.calculator.service.LoanService;
+import ru.creditservices.calculator.service.ScoringService;
 
 import java.util.List;
 
@@ -26,8 +26,8 @@ import java.util.List;
 @Tag(name="Calculator", description = "Prescoring and credit calculation API")
 public class CalculatorController {
 
-    private final ILoanService loanService;
-    private final IScoringService scoringService;
+    private final LoanService loanService;
+    private final ScoringService scoringService;
 
     @PostMapping("/offers")
     @Operation(summary = "Get loan offers",
@@ -35,10 +35,10 @@ public class CalculatorController {
                     "client data and loan parameters.")
     public ResponseEntity<List<LoanOfferDto>> getLoanOffers(
             @Valid @RequestBody LoanStatementRequestDto request) {
-        log.info("[CalculatorController] Prescoring input data: {}", request);
+        log.info("Prescoring input data: {}", request);
         List<LoanOfferDto> offers = loanService.getLoanOffers(request);
-        log.info("[CalculatorController] Intermediate result (number of offers): {}", offers.size());
-        log.info("[CalculatorController] Generated loan offers: {}", offers);
+        log.info("Intermediate result (number of offers): {}", offers.size());
+        log.info("Generated loan offers: {}", offers);
         return ResponseEntity.ok(offers);
     }
 
@@ -48,11 +48,11 @@ public class CalculatorController {
                     "term, monthly payment, and other parameters.")
     public ResponseEntity<CreditDto> calculateCredit(
             @Valid @RequestBody ScoringDataDto request) {
-        log.info("[CalculatorController] Credit calculation input data: {}", request);
+        log.info("Credit calculation input data: {}", request);
         CreditDto credit = scoringService.getFinalCreditInfo(request);
-        log.info("[CalculatorController] Intermediate result (monthly payment): {}",
+        log.info("Intermediate result (monthly payment): {}",
                 credit.getMonthlyPayment());
-        log.info("[CalculatorController] Credit calculation result: {}", credit);
+        log.info("Credit calculation result: {}", credit);
         return ResponseEntity.ok(credit);
     }
 }

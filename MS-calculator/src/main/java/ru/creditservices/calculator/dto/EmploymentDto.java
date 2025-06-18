@@ -32,7 +32,7 @@ public class EmploymentDto {
     @Min(value = 0, message = NEGATIVE_SALARY)
     private BigDecimal salary;
 
-    @Schema(description = "Позиция в компании", example = "JUNIOR")
+    @Schema(description = "Позиция в компании", example = "WORKER")
     private Position position;
 
     @Schema(description = "Общий стаж работы (в месяцах)", example = "24")

@@ -66,7 +66,8 @@ public final class ErrorMessagesUtil {
     public static final String SCORING_CURRENT_EXPERIENCE_REQUIRED = "Стаж работы на текущем месте должен быть указан";
     public static final String SCORING_CURRENT_EXPERIENCE_TOO_SMALL = "Отказ: стаж на текущем месте работы должен быть не менее 3 месяцев";
     public static final String SCORING_UNEMPLOYED = "Отказ: безработным клиентам кредит не выдается";
-    public static final String SCORING_AMOUNT_OR_SALARY_REQUIRED = "Сумма кредита и зарплата должны быть указаны";
+    public static final String SCORING_AMOUNT_REQUIRED = "Сумма кредита должна быть указана";
+    public static final String SCORING_SALARY_REQUIRED = "Зарплата должна быть указана зарплата должны быть указаны";
     public static final String SCORING_AMOUNT_TOO_LARGE = "Отказ: сумма кредита не должна превышать 24 зарплаты";
 
     public static final String PRESCORING_FIRSTNAME_INVALID = "Имя должно содержать от 2 до 30 латинских букв";

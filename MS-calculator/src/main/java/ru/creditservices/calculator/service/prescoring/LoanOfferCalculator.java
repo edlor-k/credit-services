@@ -1,30 +1,34 @@
-package ru.creditservices.calculator.service.business.prescoring;
+package ru.creditservices.calculator.service.prescoring;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ru.creditservices.calculator.config.LoanProperties;
 import ru.creditservices.calculator.model.entity.LoanOfferEntity;
 
+import static ru.creditservices.calculator.util.CreditCalculationUtil.calculateMonthlyPayment;
+
 import java.math.BigDecimal;
-import java.math.MathContext;
-import java.math.RoundingMode;
-import java.util.UUID;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class LoanOfferCalculator {
 
+    private final LoanProperties loanProperties;
+
     public LoanOfferEntity buildLoanOffer(
-            UUID uuid,
             BigDecimal requestedAmount,
             Integer term,
-            BigDecimal baseRate,
-            BigDecimal insuranceRate,
-            BigDecimal insuranceCost,
-            BigDecimal salaryDiscount,
             boolean isInsuranceEnabled,
             boolean isSalaryClient
     ) {
-        log.info("[LoanOfferCalculator] Start calculation for: " +
+        BigDecimal baseRate = loanProperties.getBaseRate();
+        BigDecimal insuranceRate = loanProperties.getInsuranceRate();
+        BigDecimal insuranceCost = loanProperties.getInsuranceCost();
+        BigDecimal salaryDiscount = loanProperties.getSalaryDiscount();
+
+        log.info("Start calculation for: " +
                         "isInsuranceEnabled={}, isSalaryClient={}, requestedAmount={}, term={}",
                 isInsuranceEnabled, isSalaryClient, requestedAmount, term);
 
@@ -34,27 +38,19 @@ public class LoanOfferCalculator {
         if (isInsuranceEnabled) {
             rate = rate.subtract(insuranceRate);
             totalAmount = totalAmount.add(insuranceCost);
-            log.info("[LoanOfferCalculator] Insurance enabled. Rate now: {}, totalAmount: {}", rate, totalAmount);
+            log.info("Insurance enabled. Rate now: {}, totalAmount: {}", rate, totalAmount);
         }
         if (isSalaryClient) {
             rate = rate.subtract(salaryDiscount);
-            log.info("[LoanOfferCalculator] Salary client. Rate now: {}", rate);
+            log.info("Salary client. Rate now: {}", rate);
         }
 
-        BigDecimal monthlyRate = rate.divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP)
-                .divide(BigDecimal.valueOf(12), 10, RoundingMode.HALF_UP);
+        BigDecimal monthlyPayment = calculateMonthlyPayment(totalAmount, term, rate);
 
-        BigDecimal numerator = totalAmount.multiply(monthlyRate);
-        BigDecimal denominator = BigDecimal.ONE.subtract(
-                BigDecimal.ONE.add(monthlyRate).pow(-term, MathContext.DECIMAL128)
-        );
-        BigDecimal monthlyPayment = numerator.divide(denominator, 2, RoundingMode.HALF_UP);
-
-        log.info("[LoanOfferCalculator] Result: rate={}, totalAmount={}, monthlyPayment={}",
+        log.info("Result: rate={}, totalAmount={}, monthlyPayment={}",
                 rate, totalAmount, monthlyPayment);
 
         LoanOfferEntity offer = LoanOfferEntity.builder()
-                .statementId(uuid)
                 .requestedAmount(requestedAmount)
                 .totalAmount(totalAmount)
                 .term(term)
@@ -64,7 +60,7 @@ public class LoanOfferCalculator {
                 .isSalaryClient(isSalaryClient)
                 .build();
 
-        log.info("[LoanOfferCalculator] Built LoanOfferDto: {}", offer);
+        log.info("Built LoanOfferDto: {}", offer);
 
         return offer;
     }
