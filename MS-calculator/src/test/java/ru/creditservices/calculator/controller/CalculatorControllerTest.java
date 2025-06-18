@@ -45,7 +45,7 @@ public class CalculatorControllerTest {
     }
 
     @Test
-    void getLoanOffers_returnsCorrectResponse() {
+    void getLoanOffersReturnsCorrectResponse() {
         LoanStatementRequestDto request = LoanStatementRequestDto.builder()
                 .amount(BigDecimal.valueOf(50000))
                 .term(12)
@@ -72,7 +72,7 @@ public class CalculatorControllerTest {
     }
 
     @Test
-    void calculateCredit_returnsCorrectResponse() {
+    void calculateCreditReturnsCorrectResponse() {
         ScoringDataDto scoringRequest = ScoringDataDto.builder()
                 .amount(BigDecimal.valueOf(50000))
                 .term(12)

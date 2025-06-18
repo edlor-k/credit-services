@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 public class ErrorHandlingControllerAdviceTest {
 
     @Test
-    void onConstraintViolationException_shouldReturnViolations() {
+    void onConstraintViolationExceptionShouldReturnViolations() {
         ConstraintViolation<?> violation = mock(ConstraintViolation.class);
 
         Path mockPath = mock(Path.class);
@@ -44,7 +44,7 @@ public class ErrorHandlingControllerAdviceTest {
     }
 
     @Test
-    void onMethodArgumentNotValidException_shouldReturnViolations() {
+    void onMethodArgumentNotValidExceptionShouldReturnViolations() {
         FieldError fieldError = new FieldError
                 ("objectName", "term", "must be greater than 6");
         BindingResult bindingResult = mock(BindingResult.class);
