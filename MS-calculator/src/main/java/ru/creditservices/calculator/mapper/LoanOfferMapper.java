@@ -8,7 +8,7 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface LoanOfferMapper {
-    LoanOfferDto toDto(LoanOfferDto entity);
+    LoanOfferDto toDto(LoanOfferEntity entity);
     LoanOfferEntity toEntity(LoanOfferDto dto);
 
     List<LoanOfferDto> toDto(List<LoanOfferEntity> entityList);
