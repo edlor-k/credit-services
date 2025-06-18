@@ -32,8 +32,8 @@ public class ScoringCalculator {
 
         if (data.getEmployment().getPosition() != null) {
             switch (data.getEmployment().getPosition()) {
-                case MIDDLE -> rate = rate.subtract(loanProperties.getPositionMiddleDiscount());
-                case SENIOR -> rate = rate.subtract(loanProperties.getPositionTopDiscount());
+                case MID_MANAGER -> rate = rate.subtract(loanProperties.getPositionMiddleDiscount());
+                case TOP_MANAGER -> rate = rate.subtract(loanProperties.getPositionTopDiscount());
             }
         }
 
@@ -47,7 +47,7 @@ public class ScoringCalculator {
             rate = rate.subtract(loanProperties.getGenderMaleDiscount());
         } else if (data.getGender() == Gender.FEMALE && age >= 32 && age <= 60) {
             rate = rate.subtract(loanProperties.getGenderFemaleDiscount());
-        } else if (data.getGender() == Gender.OTHER) {
+        } else if (data.getGender() == Gender.NON_BINARY) {
             rate = rate.add(loanProperties.getGenderOtherIncrease());
         }
 

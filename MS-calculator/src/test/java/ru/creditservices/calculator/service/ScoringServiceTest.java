@@ -74,7 +74,7 @@ class ScoringServiceTest {
                         .employmentStatus(EmploymentStatus.EMPLOYED)
                         .employmentINN("1234567890")
                         .salary(BigDecimal.valueOf(120_000))
-                        .position(Position.JUNIOR)
+                        .position(Position.WORKER)
                         .workExperienceTotal(24)
                         .workExperienceCurrent(6)
                         .build())

@@ -8,5 +8,5 @@ import lombok.RequiredArgsConstructor;
 public enum Gender {
     MALE,
     FEMALE,
-    OTHER
+    NON_BINARY
 }

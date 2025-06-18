@@ -8,5 +8,6 @@ import lombok.RequiredArgsConstructor;
 public enum MaritalStatus {
     MARRIED,
     SINGLE,
-    DIVORCED
+    DIVORCED,
+    WIDOW_WIDOWER
 }

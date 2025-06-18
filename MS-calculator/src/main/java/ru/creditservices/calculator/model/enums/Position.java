@@ -6,7 +6,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum Position {
-    JUNIOR,
-    MIDDLE,
-    SENIOR
+    WORKER,
+    MID_MANAGER,
+    TOP_MANAGER,
+    OWNER
 }

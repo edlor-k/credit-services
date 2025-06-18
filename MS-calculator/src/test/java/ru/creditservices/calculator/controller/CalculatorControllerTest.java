@@ -165,7 +165,7 @@ class CalculatorControllerTest {
                         .employmentStatus(EmploymentStatus.EMPLOYED)
                         .employmentINN("1234567890")
                         .salary(BigDecimal.valueOf(80_000))
-                        .position(ru.creditservices.calculator.model.enums.Position.JUNIOR)
+                        .position(ru.creditservices.calculator.model.enums.Position.WORKER)
                         .workExperienceTotal(24)
                         .workExperienceCurrent(12)
                         .build())
