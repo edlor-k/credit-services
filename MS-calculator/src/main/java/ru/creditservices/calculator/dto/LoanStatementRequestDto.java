@@ -26,17 +26,17 @@ public class LoanStatementRequestDto {
     @Min(value = 1, message = NEGATIVE_TERM)
     private Integer term;
 
-    @Schema(description = "Имя клиента", example = "Иван")
+    @Schema(description = "Имя клиента", example = "Petr")
     @NotBlank(message = EMPTY_NAME)
     @Size(min = 2, max = 30, message = INVALID_NAME)
     private String firstName;
 
-    @Schema(description = "Фамилия клиента", example = "Иванов")
+    @Schema(description = "Фамилия клиента", example = "Ivanov")
     @NotBlank(message = EMPTY_LASTNAME)
     @Size(min = 2, max = 30, message = INVALID_LASTNAME)
     private String lastName;
 
-    @Schema(description = "Отчество клиента", example = "Иванович")
+    @Schema(description = "Отчество клиента", example = "Ivanovich")
     @Size(min = 2, max = 30, message = INVALID_MIDDLENAME)
     private String middleName;
 
