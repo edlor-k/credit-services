@@ -21,3 +21,8 @@ loan:
   gender-female-discount: 3.0
   gender-male-discount: 3.0
   gender-other-increase: 7.0
+
+docs:
+  title: Credit Services Calculator API
+  version: 0.8.1
+  description: API for calculating loan offers and credit scoring
