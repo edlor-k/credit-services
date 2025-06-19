@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.creditservices.calculator.config.LoanProperties;
-import ru.creditservices.calculator.model.entity.LoanOfferEntity;
 
 import static ru.creditservices.calculator.util.CreditCalculationUtil.calculateMonthlyPayment;
 
@@ -17,51 +16,30 @@ public class LoanOfferCalculator {
 
     private final LoanProperties loanProperties;
 
-    public LoanOfferEntity buildLoanOffer(
-            BigDecimal requestedAmount,
-            Integer term,
-            boolean isInsuranceEnabled,
-            boolean isSalaryClient
-    ) {
-        BigDecimal baseRate = loanProperties.getBaseRate();
-        BigDecimal insuranceRate = loanProperties.getInsuranceRate();
-        BigDecimal insuranceCost = loanProperties.getInsuranceCost();
-        BigDecimal salaryDiscount = loanProperties.getSalaryDiscount();
-
-        log.info("Start calculation for: " +
-                        "isInsuranceEnabled={}, isSalaryClient={}, requestedAmount={}, term={}",
-                isInsuranceEnabled, isSalaryClient, requestedAmount, term);
-
-        BigDecimal rate = baseRate;
-        BigDecimal totalAmount = requestedAmount;
+    public BigDecimal calculateRate(boolean isInsuranceEnabled, boolean isSalaryClient) {
+        BigDecimal rate = loanProperties.getBaseRate();
 
         if (isInsuranceEnabled) {
-            rate = rate.subtract(insuranceRate);
-            totalAmount = totalAmount.add(insuranceCost);
-            log.info("Insurance enabled. Rate now: {}, totalAmount: {}", rate, totalAmount);
+            rate = rate.subtract(loanProperties.getInsuranceRate());
+            log.debug("Insurance discount applied. New rate: {}", rate);
         }
+
         if (isSalaryClient) {
-            rate = rate.subtract(salaryDiscount);
-            log.info("Salary client. Rate now: {}", rate);
+            rate = rate.subtract(loanProperties.getSalaryDiscount());
+            log.debug("Salary client discount applied. New rate: {}", rate);
         }
 
-        BigDecimal monthlyPayment = calculateMonthlyPayment(totalAmount, term, rate);
+        return rate;
+    }
 
-        log.info("Result: rate={}, totalAmount={}, monthlyPayment={}",
-                rate, totalAmount, monthlyPayment);
+    public BigDecimal calculateTotalAmount(BigDecimal requestedAmount, boolean isInsuranceEnabled) {
+        if (isInsuranceEnabled) {
+            return requestedAmount.add(loanProperties.getInsuranceCost());
+        }
+        return requestedAmount;
+    }
 
-        LoanOfferEntity offer = LoanOfferEntity.builder()
-                .requestedAmount(requestedAmount)
-                .totalAmount(totalAmount)
-                .term(term)
-                .monthlyPayment(monthlyPayment)
-                .rate(rate)
-                .isInsuranceEnabled(isInsuranceEnabled)
-                .isSalaryClient(isSalaryClient)
-                .build();
-
-        log.info("Built LoanOfferDto: {}", offer);
-
-        return offer;
+    public BigDecimal getMonthlyPayment(BigDecimal totalAmount, int term, BigDecimal rate) {
+        return calculateMonthlyPayment(totalAmount, term, rate);
     }
 }
