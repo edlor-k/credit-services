@@ -18,7 +18,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -47,7 +46,6 @@ public class LoanServiceImpl implements LoanService {
     }
 
     private List<LoanOfferEntity> generateLoanOffers(BigDecimal requestedAmount, Integer term) {
-        UUID statementId = UUID.randomUUID();
         List<LoanOfferEntity> offers = new ArrayList<>(4);
 
         for (boolean isInsuranceEnabled : new boolean[]{true, false}) {
@@ -55,7 +53,7 @@ public class LoanServiceImpl implements LoanService {
                 log.info("Combination: isInsuranceEnabled={}, isSalaryClient={}",
                         isInsuranceEnabled, isSalaryClient);
 
-                LoanOfferEntity offer = buildLoanOffer(statementId, requestedAmount, term,
+                LoanOfferEntity offer = buildLoanOffer(requestedAmount, term,
                         isInsuranceEnabled, isSalaryClient);
                 log.info("Offer: {}", offer);
                 offers.add(offer);
@@ -65,8 +63,7 @@ public class LoanServiceImpl implements LoanService {
         return offers;
     }
 
-    private LoanOfferEntity buildLoanOffer(UUID statementId,
-                                           BigDecimal requestedAmount,
+    private LoanOfferEntity buildLoanOffer(BigDecimal requestedAmount,
                                            Integer term,
                                            boolean isInsuranceEnabled,
                                            boolean isSalaryClient) {
@@ -76,7 +73,6 @@ public class LoanServiceImpl implements LoanService {
         BigDecimal monthlyPayment = loanOfferCalculator.getMonthlyPayment(totalAmount, term, rate);
 
         return LoanOfferEntity.builder()
-                .statementId(statementId)
                 .requestedAmount(requestedAmount)
                 .totalAmount(totalAmount)
                 .term(term)
