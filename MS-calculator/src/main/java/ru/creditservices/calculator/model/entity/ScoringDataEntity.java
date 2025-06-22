@@ -2,7 +2,6 @@ package ru.creditservices.calculator.model.entity;
 
 import lombok.Builder;
 import lombok.Data;
-import ru.creditservices.calculator.dto.EmploymentDto;
 import ru.creditservices.calculator.model.enums.Gender;
 import ru.creditservices.calculator.model.enums.MaritalStatus;
 
@@ -25,7 +24,7 @@ public class ScoringDataEntity {
     private String passportIssueBranch;
     private MaritalStatus maritalStatus;
     private Integer dependentAmount;
-    private EmploymentDto employment;
+    private EmploymentEntity employment;
     private String accountNumber;
     private Boolean isInsuranceEnabled;
     private Boolean isSalaryClient;
