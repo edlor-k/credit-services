@@ -1,0 +1,26 @@
+server:
+  port: 9020
+spring:
+  application:
+    name: MS-deal
+  datasource:
+    url: jdbc:postgresql://localhost:5432/credit_services
+    username: neoflex_admin
+    password: qadminwerty
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+properties:
+  calculator:
+    base-url: http://localhost:9010
+
+docs:
+  title: Deal Microservice
+  version: 0.8.0
+  description:
+      This microservice handles the deal management for the credit services.
+      It includes functionalities for creating, updating, and retrieving deals.
