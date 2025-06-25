@@ -29,7 +29,6 @@ public class StatementManagerServiceImpl implements StatementManagerService {
     @Override
     @Transactional
     public StatementEntity createStatementFromClient(ClientEntity client) {
-        log.info("Creating initial statement for client: {}", client);
         boolean exists = statementRepository.findStatementEntityByClient(client).isPresent();
 
         if (exists) {
