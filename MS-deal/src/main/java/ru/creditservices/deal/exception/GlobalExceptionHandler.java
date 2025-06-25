@@ -22,8 +22,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
-            if ("NotNull".equals(error.getCode())) {
-                errors.put(error.getField(), "Поле не может быть пустым");
+            if ("NotNull".equals(error.getCode()) || "NotBlank".equals(error.getCode())) {
+                errors.put(
+                        error.getField(),
+                        "Отсутствует обязательный параметр: " + error.getField()
+                );
             } else {
                 errors.put(error.getField(), error.getDefaultMessage());
             }
