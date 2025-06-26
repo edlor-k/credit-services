@@ -37,8 +37,8 @@ public class ErrorResponseParserServiceImpl implements ErrorResponseParserServic
             }
             throw new CalculatorValidationException(CalculatorErrorType.REQUEST_ERROR, null);
         } catch (JsonProcessingException e) {
-            log.error("Ошибка при парсинге ответа калькулятора /offers: {}", response, e);
-            throw new ParseCalculatorException("Ошибка при парсинге ответа калькулятора /offers: " + response);
+            log.error("Error parsing the calculator response /offers: {}", response, e);
+            throw new ParseCalculatorException("Error parsing the calculator response /offers: " + response);
         }
     }
 
@@ -63,15 +63,15 @@ public class ErrorResponseParserServiceImpl implements ErrorResponseParserServic
                     }
                 }
                 return CalculatorResult.requestError(
-                        "Неизвестная ошибка калькулятора",
+                        "Unknown calculator error",
                         error.getViolations()
                 );
             }
             CreditDto creditDto = objectMapper.treeToValue(node, CreditDto.class);
             return CalculatorResult.approved(creditDto);
         } catch (Exception e) {
-            log.error("Ошибка при парсинге ответа калькулятора /calc: {}", response, e);
-            throw new ParseCalculatorException("Ошибка при парсинге ответа калькулятора /calc: " + response);
+            log.error("Error parsing the calculator response /calc: {}", response, e);
+            throw new ParseCalculatorException("Error parsing the calculator response /calc: " + response);
         }
     }
 }
