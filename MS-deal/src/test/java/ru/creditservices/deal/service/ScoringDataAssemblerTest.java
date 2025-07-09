@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import ru.creditservices.deal.model.entity.*;
 import ru.creditservices.deal.model.enums.Gender;
 import ru.creditservices.deal.model.enums.MaritalStatus;
-import ru.creditservices.deal.model.jsonb.PassportId;
 import ru.creditservices.deal.service.impl.ScoringDataAssembler;
 
 import java.math.BigDecimal;
@@ -23,7 +22,7 @@ class ScoringDataAssemblerTest {
                 .lastName("Ivanov")
                 .middleName("Ivanovich")
                 .birthdate(LocalDate.of(1990, 1, 1))
-                .passportId(PassportId.builder().series("1234").number("567890").build())
+                .passportId(PassportEntity.builder().series("1234").number("567890").build())
                 .build();
 
         LoanOfferEntity offer = LoanOfferEntity.builder()

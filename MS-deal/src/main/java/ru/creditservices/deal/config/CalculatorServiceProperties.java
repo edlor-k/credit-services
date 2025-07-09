@@ -2,11 +2,11 @@ package ru.creditservices.deal.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
 @Data
-@Configuration
-@ConfigurationProperties(prefix = "properties.calculator")
-public class CalculatorProperties {
+@ConfigurationProperties(prefix = "external.calculator")
+public class CalculatorServiceProperties {
     private String baseUrl;
+    private String offersPath;
+    private String calcPath;
 }

@@ -21,9 +21,8 @@ public class SelectLoanOfferServiceImpl implements SelectLoanOfferService {
     @Override
     @Transactional
     public void selectLoanOffer(LoanOfferDto loanOfferDto) {
-        log.info("Selecting loan offer with data: {}", loanOfferDto);
         LoanOfferEntity loanOfferEntity = loanOfferMapper.toEntity(loanOfferDto);
         statementManagerService.selectLoanOfferToStatement(loanOfferEntity);
-        log.info("Loan offer selected and saved to statement with ID: {}", loanOfferEntity.getStatementId());
+        log.info("Loan offer selected for statementId={}", loanOfferEntity.getStatementId());
     }
 }

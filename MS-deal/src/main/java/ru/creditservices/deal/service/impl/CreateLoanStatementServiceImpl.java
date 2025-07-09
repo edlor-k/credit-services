@@ -1,11 +1,9 @@
 package ru.creditservices.deal.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
+import org.springframework.transaction.annotation.Transactional;
 import ru.creditservices.deal.dto.LoanOfferDto;
 import ru.creditservices.deal.dto.LoanStatementRequestDto;
 import ru.creditservices.deal.mapper.LoanOfferMapper;
@@ -36,26 +34,25 @@ public class CreateLoanStatementServiceImpl implements CreateLoanStatementServic
     @Override
     @Transactional
     public List<LoanOfferDto> getLoanOffers(LoanStatementRequestDto loanStatementRequestDto) {
-        log.info("Got request for getting loan offers: {}", loanStatementRequestDto);
+        log.info("Processing loan statement request");
+
         LoanStatementEntity loanStatementEntity = loanStatementMapper.toEntity(loanStatementRequestDto);
 
-        List<LoanOfferDto> loanOfferDtoList = calculatorClientService.fetchLoanOffers(loanStatementRequestDto);
+        List<LoanOfferDto> offersFromCalculator = calculatorClientService.fetchLoanOffers(loanStatementRequestDto);
 
-        log.info("Fetched {} loan offers: {}", loanOfferDtoList.size(), loanOfferDtoList);
-        List<LoanOfferEntity> loanOfferList = loanOfferDtoList.stream()
+        ClientEntity client = createClientService.createClient(loanStatementEntity);
+        log.info("Got/Created client with id {}", client.getClientId());
+
+        StatementEntity statement = statementManagerService.createStatementFromClient(client);
+        log.info("Got/Created statement with id {}", statement.getStatementId());
+
+        List<LoanOfferEntity> entities = offersFromCalculator.stream()
                 .map(loanOfferMapper::toEntity)
+                .peek(e -> e.setStatementId(statement.getStatementId()))
                 .toList();
 
-        ClientEntity clientEntity = createClientService.createClientFromLoanStatementRequest(loanStatementEntity);
-        log.info("Got/Created client with id {}", clientEntity.getClientId());
-
-        StatementEntity statementEntity = statementManagerService.createStatementFromClient(clientEntity);
-        log.info("Got/Created statement with id {}", statementEntity.getStatementId());
-
-        loanOfferList.forEach(offer -> offer.setStatementId(statementEntity.getStatementId()));
-        loanOfferDtoList = loanOfferList.stream()
+        return entities.stream()
                 .map(loanOfferMapper::toDto)
                 .toList();
-        return loanOfferDtoList;
     }
 }

@@ -21,5 +21,6 @@ public class CreditManagerServiceImpl implements CreditManagerService {
     public void createCreditFromCreditEntity(CreditEntity creditEntity) {
         creditEntity.setCreditStatus(CreditStatus.CALCULATED);
         creditRepository.save(creditEntity);
+        log.info("Credit created with status CALCULATED: id={}", creditEntity.getCreditId());
     }
 }

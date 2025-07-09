@@ -8,8 +8,8 @@ import ru.creditservices.deal.exception.ClientAlreadyExistException;
 import ru.creditservices.deal.exception.ClientNotFoundException;
 import ru.creditservices.deal.model.entity.ClientEntity;
 import ru.creditservices.deal.model.entity.LoanStatementEntity;
+import ru.creditservices.deal.model.entity.PassportEntity;
 import ru.creditservices.deal.model.entity.ScoringDataEntity;
-import ru.creditservices.deal.model.jsonb.PassportId;
 import ru.creditservices.deal.repository.ClientRepository;
 import ru.creditservices.deal.service.ClientManagerService;
 
@@ -22,18 +22,19 @@ public class ClientManagerServiceImpl implements ClientManagerService {
 
     @Override
     @Transactional
-    public ClientEntity createClientFromLoanStatementRequest(LoanStatementEntity entity) {
-        boolean exists = clientRepository.findClientEntityByPassportId(
+    public ClientEntity createClient(LoanStatementEntity entity) {
+        boolean exists = clientRepository.findByPassportId_SeriesAndPassportId_Number(
                 entity.getPassportSeries(), entity.getPassportNumber()
         ).isPresent();
 
         if (exists) {
-            log.warn("Client with passport {} already exists, returning existing client.",
-                     buildPassportId(entity));
+            log.warn("Client with passport {}-{} already exists", entity.getPassportSeries(),
+                    entity.getPassportNumber());
             throw new ClientAlreadyExistException(
-                    "Client with passport " + buildPassportId(entity) + " already exists.");
+                    "Client with passport " + entity.getPassportSeries() + "-" + entity.getPassportNumber() +
+                            " already exists.");
         }
-        log.info("Creating new client from loan statement request: {}", entity);
+        log.info("Creating new client for passport {}-{}", entity.getPassportSeries(), entity.getPassportNumber());
         return createInitialClient(entity);
     }
 
@@ -47,35 +48,35 @@ public class ClientManagerServiceImpl implements ClientManagerService {
                 .passportId(buildPassportId(entity))
                 .build();
         clientEntity = clientRepository.save(clientEntity);
-        log.info("Created client from loan statement request: {}", clientEntity);
+        log.debug("Client created: {}", clientEntity.getClientId());
         return clientEntity;
     }
 
     @Override
     @Transactional
     public void updateClientInformationFromScoringData(ScoringDataEntity scoringDataEntity) {
-        ClientEntity clientEntity = clientRepository.findClientEntityByPassportId(
-                scoringDataEntity.getPassportSeries(), scoringDataEntity.getPassportNumber())
+        ClientEntity clientEntity = clientRepository.findByPassportId_SeriesAndPassportId_Number(
+                        scoringDataEntity.getPassportSeries(), scoringDataEntity.getPassportNumber())
                 .orElseThrow(() -> new ClientNotFoundException("Client not found with passport: "
                         + scoringDataEntity.getPassportSeries() + " " + scoringDataEntity.getPassportNumber()));
 
-        log.info("Updating client information for client ID: {}", clientEntity.getClientId());
+        log.info("Updating client information for client {}", clientEntity.getClientId());
 
         clientEntity.setBirthdate(scoringDataEntity.getBirthdate());
         clientEntity.setGender(scoringDataEntity.getGender());
         clientEntity.setMaritalStatus(scoringDataEntity.getMaritalStatus());
         clientEntity.setMiddleName(scoringDataEntity.getMiddleName());
         clientEntity.setDependentAmount(scoringDataEntity.getDependentAmount());
-        clientEntity.getPassportId().setIssuedDate(scoringDataEntity.getPassportIssueDate());
+        clientEntity.getPassportId().setIssueDate(scoringDataEntity.getPassportIssueDate());
         clientEntity.getPassportId().setIssueBranch(scoringDataEntity.getPassportIssueBranch());
         clientEntity.setEmploymentId(scoringDataEntity.getEmployment());
 
         clientRepository.save(clientEntity);
-        log.info("Updated client information: {}", clientEntity);
+        log.debug("Client updated: {}", clientEntity.getClientId());
     }
 
-    private PassportId buildPassportId(LoanStatementEntity entity) {
-        return PassportId.builder()
+    private PassportEntity buildPassportId(LoanStatementEntity entity) {
+        return PassportEntity.builder()
                 .series(entity.getPassportSeries())
                 .number(entity.getPassportNumber())
                 .build();

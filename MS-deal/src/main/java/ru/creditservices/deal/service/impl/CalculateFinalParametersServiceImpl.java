@@ -37,40 +37,32 @@ public class CalculateFinalParametersServiceImpl implements CalculateFinalParame
 
     @Override
     @Transactional
-    public void calculateFinalParameters(
-            String statementId, FinishRegistrationRequestDto finishRegistrationRequestDto) {
-        log.info("Calculating final parameters for statement ID: {}", statementId);
+    public void calculateFinalParameters(String statementId, FinishRegistrationRequestDto finishRegistrationRequestDto) {
+        log.info("Calculate final parameters for statement {}", statementId);
 
         FinishRegistrationEntity finishRegistrationEntity =
                 finishRegistrationMapper.toEntity(finishRegistrationRequestDto);
         StatementEntity statementEntity = getAndCheckStatement(statementId);
 
-        log.info("Assembling scoring data for statement ID: {}", statementId);
         ScoringDataEntity scoringDataEntity = scoringDataAssembler
                 .assembleScoringDataEntity(statementEntity, finishRegistrationEntity);
-        log.info("Scoring data assembled for statement ID: {}", statementId);
 
-        log.info("Requesting calculator for final parameters for statement ID: {} with data: {}",
-                statementId, scoringDataEntity);
         CalculatorResult calculatorResult = calculatorClientService.fetchCalculatorResult(
                 scoringDataMapper.toDto(scoringDataEntity));
-        log.info("Received calculator result for statement ID: {}: {}", statementId, calculatorResult);
-
         processCalculatorResult(calculatorResult, statementId, scoringDataEntity);
     }
 
     private StatementEntity getAndCheckStatement(String statementId) {
         StatementEntity statementEntity = statementManagerService.getStatementOrThrow(UUID.fromString(statementId));
         if (statementEntity.getCredit() != null) {
-            log.error("Credit already exists for statement ID: {}", statementId);
+            log.error("Credit already exists for statement {}", statementId);
             throw new CreditAlreadyExistException("Credit already exists for statement ID: " + statementId);
         }
         return statementEntity;
     }
 
-    private void processCalculatorResult(
-            CalculatorResult result, String statementId, ScoringDataEntity scoringDataEntity) {
-        log.info("Processing calculator result for statement ID: {}", statementId);
+    private void processCalculatorResult(CalculatorResult result, String statementId,
+                                         ScoringDataEntity scoringDataEntity) {
         switch (result.type()) {
             case APPROVED -> handleApproved(result, statementId, scoringDataEntity);
             case BUSINESS_DECLINE -> handleBusinessDecline(result, statementId);
@@ -79,13 +71,13 @@ public class CalculateFinalParametersServiceImpl implements CalculateFinalParame
     }
 
     private void handleApproved(CalculatorResult result, String statementId, ScoringDataEntity scoringDataEntity) {
-        log.info("Loan approved for statement ID {}: {}", statementId, result.creditDto());
+        log.info("Loan approved for statement {}", statementId);
         CreditEntity creditEntity = creditMapper.toEntity(result.creditDto());
         creditManagerService.createCreditFromCreditEntity(creditEntity);
         statementManagerService.updateStatementFromScoringData(scoringDataEntity, UUID.fromString(statementId));
         statementManagerService.addCreditToStatement(UUID.fromString(statementId), creditEntity);
         clientManagerService.updateClientInformationFromScoringData(scoringDataEntity);
-        log.info("Final parameters calculated successfully for statement ID: {}", statementId);
+        log.debug("Final parameters calculated for statement {}", statementId);
     }
 
     private void handleBusinessDecline(CalculatorResult result, String statementId) {

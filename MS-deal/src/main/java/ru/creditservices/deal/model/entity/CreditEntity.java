@@ -25,13 +25,13 @@ public class CreditEntity {
     @Column(name = "credit_id")
     private UUID creditId;
 
-    @Column(name = "amount")
+    @Column(name = "amount", nullable = false)
     private BigDecimal amount;
 
-    @Column(name = "term")
+    @Column(name = "term", nullable = false)
     private Integer term;
 
-    @Column(name = "monthly_payment")
+    @Column(name = "monthly_payment", nullable = false)
     private BigDecimal monthlyPayment;
 
     @Column(name = "rate")

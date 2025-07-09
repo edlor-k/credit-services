@@ -52,7 +52,7 @@ class CreateLoanStatementServiceImplTest {
         when(loanStatementMapper.toEntity(requestDto)).thenReturn(statementEntity);
         when(calculatorClientService.fetchLoanOffers(requestDto)).thenReturn(List.of(offerDto));
         when(loanOfferMapper.toEntity(offerDto)).thenReturn(offerEntity);
-        when(clientManagerService.createClientFromLoanStatementRequest(statementEntity)).thenReturn(clientEntity);
+        when(clientManagerService.createClient(statementEntity)).thenReturn(clientEntity);
         when(statementManagerService.createStatementFromClient(clientEntity)).thenReturn(statement);
         when(loanOfferMapper.toDto(any())).thenReturn(offerDto);
 
@@ -61,7 +61,7 @@ class CreateLoanStatementServiceImplTest {
         assertThat(result).hasSize(1);
         verify(loanStatementMapper).toEntity(requestDto);
         verify(calculatorClientService).fetchLoanOffers(requestDto);
-        verify(clientManagerService).createClientFromLoanStatementRequest(statementEntity);
+        verify(clientManagerService).createClient(statementEntity);
         verify(statementManagerService).createStatementFromClient(clientEntity);
         verify(loanOfferMapper, atLeastOnce()).toEntity(offerDto);
         verify(loanOfferMapper, atLeastOnce()).toDto(any());

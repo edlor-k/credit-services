@@ -8,13 +8,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.creditservices.deal.exception.ClientAlreadyExistException;
 import ru.creditservices.deal.exception.ClientNotFoundException;
-import ru.creditservices.deal.model.entity.ClientEntity;
-import ru.creditservices.deal.model.entity.EmploymentEntity;
-import ru.creditservices.deal.model.entity.LoanStatementEntity;
-import ru.creditservices.deal.model.entity.ScoringDataEntity;
+import ru.creditservices.deal.model.entity.*;
 import ru.creditservices.deal.model.enums.Gender;
 import ru.creditservices.deal.model.enums.MaritalStatus;
-import ru.creditservices.deal.model.jsonb.PassportId;
 import ru.creditservices.deal.repository.ClientRepository;
 import ru.creditservices.deal.service.impl.ClientManagerServiceImpl;
 
@@ -48,19 +44,19 @@ class ClientManagerServiceImplTest {
                 .passportNumber("567890")
                 .build();
 
-        when(clientRepository.findClientEntityByPassportId("1234", "567890"))
+        when(clientRepository.findByPassportId_SeriesAndPassportId_Number("1234", "567890"))
                 .thenReturn(Optional.empty());
 
         ClientEntity saved = ClientEntity.builder()
                 .firstName("Ivan").lastName("Petrov").middleName("Ivanovich")
                 .birthdate(LocalDate.of(1990,1,1))
                 .email("test@example.com")
-                .passportId(PassportId.builder().series("1234").number("567890").build())
+                .passportId(PassportEntity.builder().series("1234").number("567890").build())
                 .build();
 
         when(clientRepository.save(any(ClientEntity.class))).thenReturn(saved);
 
-        ClientEntity result = clientManagerService.createClientFromLoanStatementRequest(entity);
+        ClientEntity result = clientManagerService.createClient(entity);
 
         assertNotNull(result);
         assertEquals("Ivan", result.getFirstName());
@@ -68,7 +64,7 @@ class ClientManagerServiceImplTest {
         assertEquals("Ivanovich", result.getMiddleName());
         assertEquals("1234", result.getPassportId().getSeries());
         assertEquals("567890", result.getPassportId().getNumber());
-        verify(clientRepository).findClientEntityByPassportId("1234", "567890");
+        verify(clientRepository).findByPassportId_SeriesAndPassportId_Number("1234", "567890");
         verify(clientRepository).save(any(ClientEntity.class));
     }
 
@@ -84,13 +80,13 @@ class ClientManagerServiceImplTest {
                 .passportNumber("567890")
                 .build();
 
-        when(clientRepository.findClientEntityByPassportId("1234", "567890"))
+        when(clientRepository.findByPassportId_SeriesAndPassportId_Number("1234", "567890"))
                 .thenReturn(Optional.of(mock(ClientEntity.class)));
 
         assertThrows(ClientAlreadyExistException.class, () ->
-                clientManagerService.createClientFromLoanStatementRequest(entity)
+                clientManagerService.createClient(entity)
         );
-        verify(clientRepository).findClientEntityByPassportId("1234", "567890");
+        verify(clientRepository).findByPassportId_SeriesAndPassportId_Number("1234", "567890");
         verify(clientRepository, never()).save(any());
     }
 
@@ -112,10 +108,11 @@ class ClientManagerServiceImplTest {
                 .employment(EmploymentEntity.builder().build())
                 .build();
 
-        PassportId passportId = PassportId.builder().series("1234").number("567890").build();
-        ClientEntity client = ClientEntity.builder().passportId(passportId).build();
+        PassportEntity passportEntity = PassportEntity.builder().series("1234").number("567890").build();
+        ClientEntity client = ClientEntity.builder()
+                .passportId(passportEntity).build();
 
-        when(clientRepository.findClientEntityByPassportId("1234", "567890"))
+        when(clientRepository.findByPassportId_SeriesAndPassportId_Number("1234", "567890"))
                 .thenReturn(Optional.of(client));
         when(clientRepository.save(any(ClientEntity.class))).thenReturn(client);
 
@@ -126,7 +123,7 @@ class ClientManagerServiceImplTest {
         assertEquals(MaritalStatus.SINGLE, client.getMaritalStatus());
         assertEquals("Ivanovich", client.getMiddleName());
         assertEquals(2, client.getDependentAmount());
-        assertEquals(LocalDate.of(2010, 10, 10), client.getPassportId().getIssuedDate());
+        assertEquals(LocalDate.of(2010, 10, 10), client.getPassportId().getIssueDate());
         assertEquals("MVD Russia", client.getPassportId().getIssueBranch());
         assertNotNull(client.getEmploymentId());
         verify(clientRepository).save(client);
@@ -139,7 +136,7 @@ class ClientManagerServiceImplTest {
                 .passportSeries("0000")
                 .passportNumber("000000")
                 .build();
-        when(clientRepository.findClientEntityByPassportId("0000", "000000"))
+        when(clientRepository.findByPassportId_SeriesAndPassportId_Number("0000", "000000"))
                 .thenReturn(Optional.empty());
 
         assertThrows(ClientNotFoundException.class, () ->

@@ -1,5 +1,6 @@
 server:
   port: 9020
+
 spring:
   application:
     name: MS-deal
@@ -14,13 +15,15 @@ spring:
       ddl-auto: update
     show-sql: true
 
-properties:
+external:
   calculator:
     base-url: http://localhost:9010
+    offers-path: /calculator/offers
+    calc-path: /calculator/calc
 
 docs:
   title: Deal Microservice
   version: 0.8.0
-  description:
-      This microservice handles the deal management for the credit services.
-      It includes functionalities for creating, updating, and retrieving deals.
+  description: |
+    This microservice handles the deal management for the credit services.
+    It includes functionalities for creating, updating, and retrieving deals.

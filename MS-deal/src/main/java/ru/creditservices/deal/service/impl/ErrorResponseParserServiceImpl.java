@@ -2,7 +2,6 @@ package ru.creditservices.deal.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,54 +23,55 @@ public class ErrorResponseParserServiceImpl implements ErrorResponseParserServic
     @Override
     public List<LoanOfferDto> parseLoanOffersResponse(String response) {
         try {
-            JsonNode node = objectMapper.readTree(response);
-            if (node.isArray()) {
-                return objectMapper.readValue(response, new TypeReference<>() {});
-            }
-            if (node.has("violations")) {
-                ValidationErrorResponse error = objectMapper.treeToValue(node, ValidationErrorResponse.class);
+            return objectMapper.readValue(response, new TypeReference<>() {});
+        } catch (JsonProcessingException e) {
+            try {
+                ValidationErrorResponse error = objectMapper.readValue(response, ValidationErrorResponse.class);
+                log.warn("Loan offer response contains violations: {}", error.getViolations());
                 throw new CalculatorValidationException(
                         CalculatorErrorType.REQUEST_ERROR,
                         error.getViolations()
                 );
+            } catch (JsonProcessingException ex) {
+                log.error("Failed to parse calculator response for /offers", ex);
+                throw new ParseCalculatorException("Ошибка парсинга ответа от калькулятора /offers");
             }
-            throw new CalculatorValidationException(CalculatorErrorType.REQUEST_ERROR, null);
-        } catch (JsonProcessingException e) {
-            log.error("Error parsing the calculator response /offers: {}", response, e);
-            throw new ParseCalculatorException("Error parsing the calculator response /offers: " + response);
         }
     }
 
     @Override
     public CalculatorResult parseCalculatorResultResponse(String response) {
         try {
-            JsonNode node = objectMapper.readTree(response);
-            if (node.has("violations")) {
-                ValidationErrorResponse error = objectMapper.treeToValue(node, ValidationErrorResponse.class);
+            return CalculatorResult.approved(objectMapper.readValue(response, CreditDto.class));
+        } catch (JsonProcessingException e) {
+            try {
+                ValidationErrorResponse error = objectMapper.readValue(response, ValidationErrorResponse.class);
                 if (!error.getViolations().isEmpty()) {
                     String field = error.getViolations().getFirst().getFieldName();
                     if ("business".equals(field)) {
+                        log.info("Calculator declined business logic: {}", error.getViolations());
                         return CalculatorResult.businessDecline(
                                 error.getViolations().getFirst().getMessage(),
                                 error.getViolations()
                         );
                     } else if ("request".equals(field)) {
+                        log.warn("Calculator validation failed: {}", error.getViolations());
                         return CalculatorResult.requestError(
                                 error.getViolations().getFirst().getMessage(),
                                 error.getViolations()
                         );
                     }
                 }
+                log.warn("Unknown calculator error in /calc: {}", error.getViolations());
                 return CalculatorResult.requestError(
-                        "Unknown calculator error",
+                        "Неизвестная ошибка калькулятора",
                         error.getViolations()
                 );
+            } catch (JsonProcessingException ex) {
+                log.error("Failed to parse calculator response for /calc", ex);
+                throw new ParseCalculatorException("Ошибка парсинга ответа от калькулятора /calc");
             }
-            CreditDto creditDto = objectMapper.treeToValue(node, CreditDto.class);
-            return CalculatorResult.approved(creditDto);
-        } catch (Exception e) {
-            log.error("Error parsing the calculator response /calc: {}", response, e);
-            throw new ParseCalculatorException("Error parsing the calculator response /calc: " + response);
         }
     }
+
 }

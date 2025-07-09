@@ -30,28 +30,25 @@ public class StatementManagerServiceImpl implements StatementManagerService {
     @Transactional
     public StatementEntity createStatementFromClient(ClientEntity client) {
         boolean exists = statementRepository.findStatementEntityByClient(client).isPresent();
-
         if (exists) {
-            log.warn("Statement for client {} already exists", client.getClientId());
+            log.warn("Statement already exists for clientId={}", client.getClientId());
             throw new StatementAlreadyExistException(
                     "Statement for client " + client.getClientId() + " already exists");
         }
-        log.info("Creating initial statement for client: {}", client);
-        return statementRepository.save(buildInitialStatement(client));
+        StatementEntity statement = statementRepository.save(buildInitialStatement(client));
+        log.info("Statement created: statementId={}, clientId={}", statement.getStatementId(), client.getClientId());
+        return statement;
     }
 
     @Override
     @Transactional
     public void selectLoanOfferToStatement(LoanOfferEntity loanOfferEntity) {
-        log.info("Selecting loan offer with ID: {} for statement", loanOfferEntity.getStatementId());
         StatementEntity updatedStatement = getStatementOrThrow(loanOfferEntity.getStatementId());
-
-        checkStatementStatus(updatedStatement, List.of(ApplicationStatus.PREAPPROVAL),
-                "select loan offer");
+        checkStatementStatus(updatedStatement, List.of(ApplicationStatus.PREAPPROVAL), "select loan offer");
 
         if (updatedStatement.getAppliedOffer() != null) {
-            log.error("Loan offer already selected for statement with ID {}", updatedStatement.getStatementId());
-            throw new LoanOfferAlreadyExist("Loan offer already selected for statement with ID "
+            log.error("Loan offer already selected for statementId={}", updatedStatement.getStatementId());
+            throw new LoanOfferAlreadyExist("Loan offer already selected for statementId="
                     + updatedStatement.getStatementId());
         }
 
@@ -60,39 +57,39 @@ public class StatementManagerServiceImpl implements StatementManagerService {
         updatedStatement.setAppliedOffer(loanOfferEntity);
 
         statementRepository.save(updatedStatement);
+        log.info("Loan offer attached to statementId={}", updatedStatement.getStatementId());
     }
 
     @Override
     @Transactional
     public void updateStatementFromScoringData(ScoringDataEntity scoringDataEntity, UUID statementId) {
-        log.info("Updating statement with ID: {} from scoring data", statementId);
         StatementEntity updatedStatement = getStatementOrThrow(statementId);
-
         checkStatementStatus(updatedStatement, List.of(ApplicationStatus.APPROVED, ApplicationStatus.CC_DENIED),
                 "update from scoring data");
 
         updatedStatement.setStatus(ApplicationStatus.CC_APPROVED);
         addStatusToHistory(updatedStatement, ApplicationStatus.CC_APPROVED);
         statementRepository.save(updatedStatement);
+        log.info("Statement status updated to CC_APPROVED: statementId={}", statementId);
     }
 
     @Override
     @Transactional
     public void addCreditToStatement(UUID statementId, CreditEntity creditEntity) {
-        log.info("Adding credit to statement with ID: {}", statementId);
         StatementEntity updatedStatement = getStatementOrThrow(statementId);
         updatedStatement.setCredit(creditEntity);
         statementRepository.save(updatedStatement);
+        log.info("Credit added to statement: statementId={}, creditId={}", statementId, creditEntity.getCreditId());
     }
 
     @Override
     @Transactional
     public void setLoanWaiver(UUID uuid) {
-        log.warn("Loan waiver for statement with ID {} set", uuid);
         StatementEntity updatedStatement = getStatementOrThrow(uuid);
         updatedStatement.setStatus(ApplicationStatus.CC_DENIED);
         addStatusToHistory(updatedStatement, ApplicationStatus.CC_DENIED);
         statementRepository.save(updatedStatement);
+        log.warn("Loan waiver set for statementId={}", uuid);
     }
 
     @Override
@@ -100,7 +97,7 @@ public class StatementManagerServiceImpl implements StatementManagerService {
     public StatementEntity getStatementOrThrow(UUID statementId) {
         return statementRepository.findStatementEntityByStatementId(statementId)
                 .orElseThrow(() -> {
-                    log.error("Statement not found with ID: {}", statementId);
+                    log.error("Statement not found: statementId={}", statementId);
                     return new StatementNotFoundException("Statement not found with ID: " + statementId);
                 });
     }
@@ -133,9 +130,9 @@ public class StatementManagerServiceImpl implements StatementManagerService {
     private void checkStatementStatus(StatementEntity statement,
                                       List<ApplicationStatus> expected, String actionDescription) {
         if (!expected.contains(statement.getStatus())) {
-            log.error("Cannot {} for statement with ID {}: current status is {}",
-                    actionDescription, statement.getStatementId(), statement.getStatus());
-            throw new InvalidApplicationStatus("Cannot " + actionDescription + " for statement with ID "
+            log.error("Cannot {} for statementId={}: status={}", actionDescription, statement.getStatementId(),
+                    statement.getStatus());
+            throw new InvalidApplicationStatus("Cannot " + actionDescription + " for statementId="
                     + statement.getStatementId() + ": current status is " + statement.getStatus());
         }
     }
