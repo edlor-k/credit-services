@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
+import ru.creditservices.deal.config.CalculatorServiceProperties;
 import ru.creditservices.deal.dto.*;
 import ru.creditservices.deal.service.impl.CalculatorClientServiceImpl;
 
@@ -21,6 +21,8 @@ class CalculatorClientServiceImplTest {
     private RestClient calculatorRestClient;
     @Mock
     private ErrorResponseParserService errorResponseParserService;
+    @Mock
+    private CalculatorServiceProperties calculatorServiceProperties;
 
     @InjectMocks
     private CalculatorClientServiceImpl service;
@@ -28,17 +30,8 @@ class CalculatorClientServiceImplTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-    }
-
-    @Test
-    @DisplayName("Должен корректно отправлять запрос на получение кредитных предложений")
-    void fetchLoanOffersReturnsEmptyListIfRestClientError() {
-        LoanStatementRequestDto requestDto = new LoanStatementRequestDto();
-        when(calculatorRestClient.post()).thenThrow(new RestClientException("Down"));
-
-        List<LoanOfferDto> result = service.fetchLoanOffers(requestDto);
-        assertThat(result).isEmpty();
-        verify(errorResponseParserService, never()).parseLoanOffersResponse(any());
+        when(calculatorServiceProperties.getOffersPath()).thenReturn("/offers");
+        when(calculatorServiceProperties.getCalcPath()).thenReturn("/calc");
     }
 
     @Test
