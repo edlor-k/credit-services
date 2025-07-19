@@ -70,6 +70,7 @@ public class ClientManagerServiceImpl implements ClientManagerService {
         clientEntity.getPassportId().setIssueDate(scoringDataEntity.getPassportIssueDate());
         clientEntity.getPassportId().setIssueBranch(scoringDataEntity.getPassportIssueBranch());
         clientEntity.setEmploymentId(scoringDataEntity.getEmployment());
+        clientEntity.setAccountNumber(scoringDataEntity.getAccountNumber());
 
         clientRepository.save(clientEntity);
         log.debug("Client updated: {}", clientEntity.getClientId());
