@@ -8,9 +8,8 @@ import ru.creditservices.statement.service.PrescoringService;
 
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import static ru.creditservices.statement.util.RegexPatternsUtil.*;
@@ -19,6 +18,7 @@ import static ru.creditservices.statement.util.ErrorMessagesUtil.*;
 @Service
 @Slf4j
 public class PrescoringServiceImpl implements PrescoringService {
+
     private static final Pattern NAME_PATTERN = Pattern.compile(NAME);
     private static final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL);
     private static final Pattern PASSPORT_SERIES_PATTERN = Pattern.compile(PASSPORT_SERIES);
@@ -26,69 +26,61 @@ public class PrescoringServiceImpl implements PrescoringService {
 
     @Override
     public void businessValidate(LoanStatementEntity entity) {
-        log.info("Start validation: {}", entity);
+        log.info("Start prescoring validation: {}", entity);
 
-        List<String> errors = new ArrayList<>();
+        Map<String, String> errors = new LinkedHashMap<>();
 
-        validateName(entity.getFirstName(), PRESCORING_FIRSTNAME_INVALID).ifPresent(errors::add);
-        validateName(entity.getLastName(), PRESCORING_LASTNAME_INVALID).ifPresent(errors::add);
-        validateMiddleName(entity.getMiddleName()).ifPresent(errors::add);
+        validateField(entity.getFirstName(), NAME_PATTERN, "firstName", PRESCORING_FIRSTNAME_INVALID, errors);
+        validateField(entity.getLastName(), NAME_PATTERN, "lastName", PRESCORING_LASTNAME_INVALID, errors);
+        validateMiddleName(entity.getMiddleName(), errors);
 
-        validateAmount(entity.getAmount()).ifPresent(errors::add);
-        validateTerm(entity.getTerm()).ifPresent(errors::add);
-        validateBirthdate(entity.getBirthdate()).ifPresent(errors::add);
-        validateEmail(entity.getEmail()).ifPresent(errors::add);
-        validatePassportSeries(entity.getPassportSeries()).ifPresent(errors::add);
-        validatePassportNumber(entity.getPassportNumber()).ifPresent(errors::add);
+        validateAmount(entity.getAmount(), errors);
+        validateTerm(entity.getTerm(), errors);
+        validateBirthdate(entity.getBirthdate(), errors);
+        validateField(entity.getEmail(), EMAIL_PATTERN, "email", PRESCORING_EMAIL_INVALID, errors);
+        validateField(entity.getPassportSeries(), PASSPORT_SERIES_PATTERN, "passportSeries", PRESCORING_PASSPORT_SERIES_INVALID, errors);
+        validateField(entity.getPassportNumber(), PASSPORT_NUMBER_PATTERN, "passportNumber", PRESCORING_PASSPORT_NUMBER_INVALID, errors);
 
         if (!errors.isEmpty()) {
-            String errorMessage = String.join(",\n", errors);
-            log.error("Validation FAILED with errors: {}", errorMessage);
-            throw new PrescoringBusinessException(errorMessage);
+            log.error("Prescoring validation failed with errors: {}", errors);
+            throw new PrescoringBusinessException("Ошибка бизнес-валидации анкеты", errors);
         }
 
-        log.debug("Validation PASSED for: {}", entity);
+        log.debug("Prescoring validation passed for entity: {}", entity);
     }
 
-    private Optional<String> validateName(String name, String errorMsg) {
-        return (name == null || !NAME_PATTERN.matcher(name).matches())
-                ? Optional.of(errorMsg) : Optional.empty();
+    private void validateField(String value, Pattern pattern, String field, String errorMsg, Map<String, String> errors) {
+        if (value == null || !pattern.matcher(value).matches()) {
+            errors.put(field, errorMsg);
+        }
     }
 
-    private Optional<String> validateMiddleName(String middleName) {
-        if (middleName == null || middleName.isEmpty()) return Optional.empty();
-        return !NAME_PATTERN.matcher(middleName).matches()
-                ? Optional.of(PRESCORING_MIDDLENAME_INVALID) : Optional.empty();
+    private void validateMiddleName(String middleName, Map<String, String> errors) {
+        if (middleName != null && !middleName.isEmpty() && !NAME_PATTERN.matcher(middleName).matches()) {
+            errors.put("middleName", PRESCORING_MIDDLENAME_INVALID);
+        }
     }
 
-    private Optional<String> validateAmount(Number amount) {
-        return (amount == null || amount.longValue() < 20000)
-                ? Optional.of(PRESCORING_AMOUNT_INVALID) : Optional.empty();
+    private void validateAmount(Number amount, Map<String, String> errors) {
+        if (amount == null || amount.longValue() < 20000) {
+            errors.put("amount", PRESCORING_AMOUNT_INVALID);
+        }
     }
 
-    private Optional<String> validateTerm(Integer term) {
-        return (term == null || term < 6) ? Optional.of(PRESCORING_TERM_INVALID) : Optional.empty();
+    private void validateTerm(Integer term, Map<String, String> errors) {
+        if (term == null || term < 6) {
+            errors.put("term", PRESCORING_TERM_INVALID);
+        }
     }
 
-    private Optional<String> validateBirthdate(LocalDate birthdate) {
-        if (birthdate == null) return Optional.of(PRESCORING_BIRTHDATE_REQUIRED);
-        int age = Period.between(birthdate, LocalDate.now()).getYears();
-        return (age < 18) ? Optional.of(PRESCORING_AGE_INVALID) : Optional.empty();
-    }
-
-    private Optional<String> validateEmail(String email) {
-        return (email == null || !EMAIL_PATTERN.matcher(email).matches())
-                ? Optional.of(PRESCORING_EMAIL_INVALID) : Optional.empty();
-    }
-
-    private Optional<String> validatePassportSeries(String series) {
-        return (series == null || !PASSPORT_SERIES_PATTERN.matcher(series).matches())
-                ? Optional.of(PRESCORING_PASSPORT_SERIES_INVALID) : Optional.empty();
-    }
-
-    private Optional<String> validatePassportNumber(String number) {
-        return (number == null || !PASSPORT_NUMBER_PATTERN.matcher(number).matches())
-                ? Optional.of(PRESCORING_PASSPORT_NUMBER_INVALID) : Optional.empty();
+    private void validateBirthdate(LocalDate birthdate, Map<String, String> errors) {
+        if (birthdate == null) {
+            errors.put("birthdate", PRESCORING_BIRTHDATE_REQUIRED);
+        } else {
+            int age = Period.between(birthdate, LocalDate.now()).getYears();
+            if (age < 18) {
+                errors.put("birthdate", PRESCORING_AGE_INVALID);
+            }
+        }
     }
 }
-

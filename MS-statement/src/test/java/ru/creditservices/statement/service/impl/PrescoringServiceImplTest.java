@@ -44,7 +44,7 @@ class PrescoringServiceImplTest {
         entity.setFirstName("Иван123");
         PrescoringBusinessException ex = assertThrows(PrescoringBusinessException.class,
                 () -> prescoringService.businessValidate(entity));
-        assertTrue(ex.getMessage().contains("Имя"));
+        assertTrue(ex.getDetails().containsKey("firstName"));
     }
 
     @Test
@@ -53,7 +53,7 @@ class PrescoringServiceImplTest {
         entity.setLastName("");
         PrescoringBusinessException ex = assertThrows(PrescoringBusinessException.class,
                 () -> prescoringService.businessValidate(entity));
-        assertTrue(ex.getMessage().contains("Фамилия"));
+        assertTrue(ex.getDetails().containsKey("lastName"));
     }
 
     @Test
@@ -62,7 +62,7 @@ class PrescoringServiceImplTest {
         entity.setMiddleName("!@#$%");
         PrescoringBusinessException ex = assertThrows(PrescoringBusinessException.class,
                 () -> prescoringService.businessValidate(entity));
-        assertTrue(ex.getMessage().contains("Отчество"));
+        assertTrue(ex.getDetails().containsKey("middleName"));
     }
 
     @Test
@@ -71,7 +71,7 @@ class PrescoringServiceImplTest {
         entity.setAmount(BigDecimal.valueOf(10000));
         PrescoringBusinessException ex = assertThrows(PrescoringBusinessException.class,
                 () -> prescoringService.businessValidate(entity));
-        assertTrue(ex.getMessage().contains("Сумма"));
+        assertTrue(ex.getDetails().containsKey("amount"));
     }
 
     @Test
@@ -80,7 +80,7 @@ class PrescoringServiceImplTest {
         entity.setTerm(3);
         PrescoringBusinessException ex = assertThrows(PrescoringBusinessException.class,
                 () -> prescoringService.businessValidate(entity));
-        assertTrue(ex.getMessage().contains("Срок"));
+        assertTrue(ex.getDetails().containsKey("term"));
     }
 
     @Test
@@ -89,7 +89,7 @@ class PrescoringServiceImplTest {
         entity.setBirthdate(LocalDate.now().minusYears(16));
         PrescoringBusinessException ex = assertThrows(PrescoringBusinessException.class,
                 () -> prescoringService.businessValidate(entity));
-        assertTrue(ex.getMessage().contains("старше"));
+        assertTrue(ex.getDetails().containsKey("birthdate"));
     }
 
     @Test
@@ -98,7 +98,7 @@ class PrescoringServiceImplTest {
         entity.setEmail("not-an-email");
         PrescoringBusinessException ex = assertThrows(PrescoringBusinessException.class,
                 () -> prescoringService.businessValidate(entity));
-        assertTrue(ex.getMessage().contains("email"));
+        assertTrue(ex.getDetails().containsKey("email"));
     }
 
     @Test
@@ -107,7 +107,7 @@ class PrescoringServiceImplTest {
         entity.setPassportSeries("12AB");
         PrescoringBusinessException ex = assertThrows(PrescoringBusinessException.class,
                 () -> prescoringService.businessValidate(entity));
-        assertTrue(ex.getMessage().contains("Серия паспорта"));
+        assertTrue(ex.getDetails().containsKey("passportSeries"));
     }
 
     @Test
@@ -116,6 +116,6 @@ class PrescoringServiceImplTest {
         entity.setPassportNumber("ABC123");
         PrescoringBusinessException ex = assertThrows(PrescoringBusinessException.class,
                 () -> prescoringService.businessValidate(entity));
-        assertTrue(ex.getMessage().contains("Номер паспорта"));
+        assertTrue(ex.getDetails().containsKey("passportNumber"));
     }
 }

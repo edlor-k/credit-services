@@ -54,8 +54,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDto> handlePrescoringBusiness(PrescoringBusinessException ex) {
         ErrorResponseDto response = new ErrorResponseDto(
                 "BUSINESS_VALIDATION",
-                "Ошибка бизнес-валидации: " + ex.getMessage(),
-                null
+                ex.getMessage(),
+                ex.getDetails()
         );
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
     }
