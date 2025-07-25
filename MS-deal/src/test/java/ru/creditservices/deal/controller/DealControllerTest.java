@@ -15,6 +15,7 @@ import ru.creditservices.deal.service.CreateLoanStatementService;
 import ru.creditservices.deal.service.SelectLoanOfferService;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -72,11 +73,12 @@ class DealControllerTest {
     @Test
     @DisplayName("Корректный расчет окончательных параметров кредита")
     void calculateFinalLoanParametersShouldCallServiceAndReturnOk() {
-        String statementId = "123";
+        UUID statementId = UUID.fromString("123");
         doNothing().when(calculateFinalParametersService)
                 .calculateFinalParameters(statementId, finishRegistrationRequestDto);
 
-        ResponseEntity<Void> response = dealController.calculateFinalLoanParameters(statementId, finishRegistrationRequestDto);
+        ResponseEntity<Void> response = dealController.calculateFinalLoanParameters(statementId,
+                finishRegistrationRequestDto);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         verify(calculateFinalParametersService, times(1))

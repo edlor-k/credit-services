@@ -4,20 +4,29 @@ server:
 spring:
   application:
     name: MS-deal
+
   datasource:
     url: jdbc:postgresql://localhost:5432/credit_services
     username: neoflex_admin
     password: qadminwerty
     driver-class-name: org.postgresql.Driver
+
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: validate
     show-sql: true
+
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.xml
     drop-first: false
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 external:
   calculator:
@@ -31,3 +40,12 @@ docs:
   description: |
     This microservice handles the deal management for the credit services.
     It includes functionalities for creating, updating, and retrieving deals.
+
+kafka:
+  topic:
+    finish-registration: finish-registration
+    create-documents: create-documents
+    send-documents: send-documents
+    send-ses: send-ses
+    credit-issued: credit-issued
+    statement-denied: statement-denied

@@ -2,6 +2,8 @@ package ru.creditservices.deal.service;
 
 import ru.creditservices.deal.dto.FinishRegistrationRequestDto;
 
+import java.util.UUID;
+
 public interface CalculateFinalParametersService {
-    void calculateFinalParameters(String statementId, FinishRegistrationRequestDto finishRegistrationRequestDto);
+    void calculateFinalParameters(UUID statementId, FinishRegistrationRequestDto finishRegistrationRequestDto);
 }

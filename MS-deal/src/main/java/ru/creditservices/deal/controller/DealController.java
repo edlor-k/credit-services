@@ -11,11 +11,15 @@ import org.springframework.web.bind.annotation.*;
 import ru.creditservices.deal.dto.FinishRegistrationRequestDto;
 import ru.creditservices.deal.dto.LoanOfferDto;
 import ru.creditservices.deal.dto.LoanStatementRequestDto;
+import ru.creditservices.deal.factory.EmailMessageFactory;
+import ru.creditservices.deal.model.enums.EmailTheme;
 import ru.creditservices.deal.service.CalculateFinalParametersService;
 import ru.creditservices.deal.service.CreateLoanStatementService;
+import ru.creditservices.deal.service.KafkaEmailService;
 import ru.creditservices.deal.service.SelectLoanOfferService;
 
 import java.util.List;
+import java.util.UUID;
 
 @Validated
 @RestController
@@ -28,6 +32,8 @@ public class DealController {
     private final CalculateFinalParametersService calculateFinalParametersService;
     private final CreateLoanStatementService createLoanStatementService;
     private final SelectLoanOfferService selectLoanOfferService;
+    private final KafkaEmailService kafkaEmailService;
+    private final EmailMessageFactory emailMessageFactory;
 
     @PostMapping("/statement")
     @Operation(summary = "Create loan statement",
@@ -59,7 +65,7 @@ public class DealController {
             description = "Calculates final loan parameters based on the selected offer and " +
                     "additional registration data")
     public ResponseEntity<Void> calculateFinalLoanParameters(
-            @PathVariable("statementId") String statementId,
+            @PathVariable("statementId") UUID statementId,
             @Valid @RequestBody FinishRegistrationRequestDto finishRegistrationRequestDto
     ) {
         log.info("Calculating final loan parameters for statementId: {}", statementId);
@@ -69,4 +75,27 @@ public class DealController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/document/{statementId}/send")
+    @Operation(summary = "Send documents to client", description = "Triggers an email with document sending instructions")
+    public ResponseEntity<Void> requestToSendDocuments(@PathVariable UUID statementId) {
+        var message = emailMessageFactory.buildEmailMessage(statementId, EmailTheme.CREATE_DOCUMENTS);
+        kafkaEmailService.sendMessage(message);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/document/{statementId}/sign")
+    @Operation(summary = "Ask client to sign documents", description = "Triggers an email with signing instructions")
+    public ResponseEntity<Void> requestToSignDocuments(@PathVariable UUID statementId) {
+        var message = emailMessageFactory.buildEmailMessage(statementId, EmailTheme.SEND_SES);
+        kafkaEmailService.sendMessage(message);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/document/{statementId}/code")
+    @Operation(summary = "Confirm document signing", description = "Sends confirmation email after signing")
+    public ResponseEntity<Void> confirmDocumentSigning(@PathVariable UUID statementId) {
+        var message = emailMessageFactory.buildEmailMessage(statementId, EmailTheme.CREDIT_ISSUED);
+        kafkaEmailService.sendMessage(message);
+        return ResponseEntity.ok().build();
+    }
 }
