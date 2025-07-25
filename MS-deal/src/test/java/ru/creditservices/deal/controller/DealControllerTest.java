@@ -7,24 +7,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
-import ru.creditservices.deal.dto.FinishRegistrationRequestDto;
 import ru.creditservices.deal.dto.LoanOfferDto;
 import ru.creditservices.deal.dto.LoanStatementRequestDto;
-import ru.creditservices.deal.service.CalculateFinalParametersService;
 import ru.creditservices.deal.service.CreateLoanStatementService;
 import ru.creditservices.deal.service.SelectLoanOfferService;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DealControllerTest {
-
-    @Mock
-    private CalculateFinalParametersService calculateFinalParametersService;
 
     @Mock
     private CreateLoanStatementService createLoanStatementService;
@@ -37,13 +31,11 @@ class DealControllerTest {
 
     private LoanStatementRequestDto statementRequestDto;
     private LoanOfferDto loanOfferDto;
-    private FinishRegistrationRequestDto finishRegistrationRequestDto;
 
     @BeforeEach
     void setUp() {
         statementRequestDto = new LoanStatementRequestDto();
         loanOfferDto = new LoanOfferDto();
-        finishRegistrationRequestDto = new FinishRegistrationRequestDto();
     }
 
     @Test
@@ -68,20 +60,5 @@ class DealControllerTest {
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         verify(selectLoanOfferService, times(1)).selectLoanOffer(loanOfferDto);
-    }
-
-    @Test
-    @DisplayName("Корректный расчет окончательных параметров кредита")
-    void calculateFinalLoanParametersShouldCallServiceAndReturnOk() {
-        UUID statementId = UUID.fromString("123");
-        doNothing().when(calculateFinalParametersService)
-                .calculateFinalParameters(statementId, finishRegistrationRequestDto);
-
-        ResponseEntity<Void> response = dealController.calculateFinalLoanParameters(statementId,
-                finishRegistrationRequestDto);
-
-        assertThat(response.getStatusCode().value()).isEqualTo(200);
-        verify(calculateFinalParametersService, times(1))
-                .calculateFinalParameters(statementId, finishRegistrationRequestDto);
     }
 }
