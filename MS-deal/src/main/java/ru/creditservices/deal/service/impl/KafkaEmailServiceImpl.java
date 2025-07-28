@@ -3,9 +3,9 @@ package ru.creditservices.deal.service.impl;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import ru.creditservices.deal.config.KafkaTopicProperties;
 import ru.creditservices.deal.dto.EmailMessageDto;
 import ru.creditservices.deal.exception.KafkaTopicNotFoundException;
 import ru.creditservices.deal.model.enums.EmailTheme;
@@ -20,30 +20,18 @@ import java.util.Map;
 public class KafkaEmailServiceImpl implements KafkaEmailService {
 
     private final KafkaTemplate<String, EmailMessageDto> kafkaTemplate;
-
-    @Value("${kafka.topic.finish-registration}")
-    private String finishRegistrationTopic;
-    @Value("${kafka.topic.create-documents}")
-    private String createDocumentsTopic;
-    @Value("${kafka.topic.send-documents}")
-    private String sendDocumentsTopic;
-    @Value("${kafka.topic.send-ses}")
-    private String sendSesTopic;
-    @Value("${kafka.topic.credit-issued}")
-    private String creditIssuedTopic;
-    @Value("${kafka.topic.statement-denied}")
-    private String statementDeniedTopic;
+    private final KafkaTopicProperties kafkaTopicProperties;
 
     private final Map<EmailTheme, String> topicMap = new EnumMap<>(EmailTheme.class);
 
     @PostConstruct
-    private void initTopicMap() {
-        topicMap.put(EmailTheme.FINISH_REGISTRATION, finishRegistrationTopic);
-        topicMap.put(EmailTheme.CREATE_DOCUMENTS, createDocumentsTopic);
-        topicMap.put(EmailTheme.SEND_DOCUMENTS, sendDocumentsTopic);
-        topicMap.put(EmailTheme.SEND_SES, sendSesTopic);
-        topicMap.put(EmailTheme.CREDIT_ISSUED, creditIssuedTopic);
-        topicMap.put(EmailTheme.STATEMENT_DENIED, statementDeniedTopic);
+    private void initTopiMap() {
+        topicMap.put(EmailTheme.FINISH_REGISTRATION, kafkaTopicProperties.getTopics().get("finish-registration"));
+        topicMap.put(EmailTheme.CREATE_DOCUMENTS, kafkaTopicProperties.getTopics().get("create-documents"));
+        topicMap.put(EmailTheme.SEND_DOCUMENTS, kafkaTopicProperties.getTopics().get("send-documents"));
+        topicMap.put(EmailTheme.SEND_SES, kafkaTopicProperties.getTopics().get("send-ses"));
+        topicMap.put(EmailTheme.CREDIT_ISSUED, kafkaTopicProperties.getTopics().get("credit-issued"));
+        topicMap.put(EmailTheme.STATEMENT_DENIED, kafkaTopicProperties.getTopics().get("statement-denied"));
     }
 
     @Override

@@ -8,7 +8,7 @@ import ru.creditservices.deal.exception.ClientNotFoundException;
 import ru.creditservices.deal.factory.EmailMessageFactory;
 import ru.creditservices.deal.model.enums.EmailTheme;
 import ru.creditservices.deal.service.impl.ClientLookupServiceImpl;
-import ru.creditservices.deal.util.EmailTemplateConstants;
+import ru.creditservices.deal.util.EmailTemplateProvider;
 
 import java.util.UUID;
 
@@ -18,6 +18,7 @@ import java.util.UUID;
 public class EmailMessageFactoryImpl implements EmailMessageFactory {
 
     private final ClientLookupServiceImpl clientLookupService;
+    private final EmailTemplateProvider emailTemplateProvider;
 
     @Override
     public EmailMessageDto buildEmailMessage(UUID statementId, EmailTheme theme) {
@@ -28,10 +29,10 @@ public class EmailMessageFactoryImpl implements EmailMessageFactory {
             throw new ClientNotFoundException("Client email not found for statementId: " + statementId);
         }
 
-        String text = EmailTemplateConstants.EMAIL_TEMPLATES.getOrDefault(
-                theme,
-                "Уведомление по вашей заявке"
-        );
+        String text = emailTemplateProvider.getTemplate(theme);
+        if (text == null) {
+            text = "Уведомление по вашей заявке";
+        }
 
         EmailMessageDto emailMessage = EmailMessageDto.builder()
                 .address(clientEmail)

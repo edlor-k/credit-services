@@ -18,6 +18,7 @@ import ru.creditservices.deal.model.enums.CalculatorErrorType;
 import ru.creditservices.deal.service.*;
 
 import java.util.UUID;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -54,10 +55,11 @@ public class CalculateFinalParametersServiceImpl implements CalculateFinalParame
 
     private StatementEntity getAndCheckStatement(UUID statementId) {
         StatementEntity statementEntity = statementManagerService.getStatementOrThrow(statementId);
-        if (statementEntity.getCredit() != null) {
-            log.error("Credit already exists for statement {}", statementId);
-            throw new CreditAlreadyExistException("Credit already exists for statement ID: " + statementId);
-        }
+        Optional.ofNullable(statementEntity.getCredit())
+                .ifPresent(credit -> {
+                    log.error("Credit already exists for statement {}", statementId);
+                    throw new CreditAlreadyExistException("Credit already exists for statement ID: " + statementId);
+                });
         return statementEntity;
     }
 

@@ -9,6 +9,7 @@ import ru.creditservices.deal.model.entity.StatementEntity;
 import ru.creditservices.deal.service.ClientLookupService;
 
 import java.util.UUID;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,11 +22,11 @@ public class ClientLookupServiceImpl implements ClientLookupService {
     public String getEmailByStatementId(UUID statementId) {
         log.debug("Processing client lookup request for statementId={}", statementId);
         StatementEntity statement = statementManagerService.getStatementOrThrow(statementId);
-        ClientEntity client = statement.getClient();
-        if (client == null) {
-            log.error("No client found for statementId={}", statementId);
-            throw new ClientNotFoundException("Client not found for statementId: " + statementId);
-        }
+        ClientEntity client = Optional.ofNullable(statement.getClient())
+                .orElseThrow(() -> {
+                    log.error("No client found for statementId={}", statementId);
+                    return new ClientNotFoundException("Client not found for statementId: " + statementId);
+                });
         String email = client.getEmail();
         log.debug("Found email={} for statementId={}", email, statementId);
         return email;

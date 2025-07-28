@@ -49,3 +49,12 @@ kafka:
     send-ses: send-ses
     credit-issued: credit-issued
     statement-denied: statement-denied
+
+email:
+  templates:
+    finish-registration: "Пожалуйста, завершите регистрацию для получения кредита."
+    create-documents: "Ваши документы успешно сформированы."
+    send-documents: "Документы были отправлены на вашу почту."
+    send-ses: "Пожалуйста, подпишите документы через электронную подпись."
+    credit-issued: "Поздравляем! Кредит был успешно выдан."
+    statement-denied: "К сожалению, ваша заявка на кредит была отклонена."
