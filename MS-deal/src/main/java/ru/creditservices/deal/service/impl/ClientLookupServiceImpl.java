@@ -22,11 +22,12 @@ public class ClientLookupServiceImpl implements ClientLookupService {
     public String getEmailByStatementId(UUID statementId) {
         log.debug("Processing client lookup request for statementId={}", statementId);
         StatementEntity statement = statementManagerService.getStatementOrThrow(statementId);
-        ClientEntity client = Optional.ofNullable(statement.getClient())
-                .orElseThrow(() -> {
-                    log.error("No client found for statementId={}", statementId);
-                    return new ClientNotFoundException("Client not found for statementId: " + statementId);
-                });
+        ClientEntity client = Optional.ofNullable(statement)
+            .map(StatementEntity::getClient)
+            .orElseThrow(() -> {
+                log.error("No client found for statementId={}", statementId);
+                return new ClientNotFoundException("Client not found for statementId: " + statementId);
+            });
         String email = client.getEmail();
         log.debug("Found email={} for statementId={}", email, statementId);
         return email;
