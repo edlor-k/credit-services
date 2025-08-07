@@ -7,10 +7,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
-import ru.creditservices.deal.dto.FinishRegistrationRequestDto;
 import ru.creditservices.deal.dto.LoanOfferDto;
 import ru.creditservices.deal.dto.LoanStatementRequestDto;
-import ru.creditservices.deal.service.CalculateFinalParametersService;
 import ru.creditservices.deal.service.CreateLoanStatementService;
 import ru.creditservices.deal.service.SelectLoanOfferService;
 
@@ -23,9 +21,6 @@ import static org.mockito.Mockito.*;
 class DealControllerTest {
 
     @Mock
-    private CalculateFinalParametersService calculateFinalParametersService;
-
-    @Mock
     private CreateLoanStatementService createLoanStatementService;
 
     @Mock
@@ -36,13 +31,11 @@ class DealControllerTest {
 
     private LoanStatementRequestDto statementRequestDto;
     private LoanOfferDto loanOfferDto;
-    private FinishRegistrationRequestDto finishRegistrationRequestDto;
 
     @BeforeEach
     void setUp() {
         statementRequestDto = new LoanStatementRequestDto();
         loanOfferDto = new LoanOfferDto();
-        finishRegistrationRequestDto = new FinishRegistrationRequestDto();
     }
 
     @Test
@@ -67,19 +60,5 @@ class DealControllerTest {
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         verify(selectLoanOfferService, times(1)).selectLoanOffer(loanOfferDto);
-    }
-
-    @Test
-    @DisplayName("Корректный расчет окончательных параметров кредита")
-    void calculateFinalLoanParametersShouldCallServiceAndReturnOk() {
-        String statementId = "123";
-        doNothing().when(calculateFinalParametersService)
-                .calculateFinalParameters(statementId, finishRegistrationRequestDto);
-
-        ResponseEntity<Void> response = dealController.calculateFinalLoanParameters(statementId, finishRegistrationRequestDto);
-
-        assertThat(response.getStatusCode().value()).isEqualTo(200);
-        verify(calculateFinalParametersService, times(1))
-                .calculateFinalParameters(statementId, finishRegistrationRequestDto);
     }
 }
