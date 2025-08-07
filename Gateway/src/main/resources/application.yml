@@ -1,0 +1,22 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: Gateway
+
+external:
+  deal:
+    base-url: http://localhost:9020
+    statement-path: /deal/statement
+    offer-path: /deal/offer/select
+  statement:
+    base-url: http://localhost:9030
+    statement-path: /calculator/statement
+    offer-path: /calculator/offer/select
+
+docs:
+  title: Statement Microservice
+  version: 0.8.0
+  description: |
+    This microservice is responsible for prescoring and requests to the deal microservice.
