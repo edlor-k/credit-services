@@ -1,16 +1,23 @@
-package ru.creditservices.deal.service;
+package ru.creditservices.deal.service.impl;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
+import ru.creditservices.deal.dto.EmailMessageDto;
 import ru.creditservices.deal.dto.LoanOfferDto;
+import ru.creditservices.deal.factory.EmailMessageFactory;
 import ru.creditservices.deal.mapper.LoanOfferMapper;
 import ru.creditservices.deal.model.entity.LoanOfferEntity;
-import ru.creditservices.deal.service.impl.SelectLoanOfferServiceImpl;
+import ru.creditservices.deal.model.enums.EmailTheme;
+import ru.creditservices.deal.service.KafkaEmailService;
+import ru.creditservices.deal.service.StatementManagerService;
+
+import java.util.UUID;
 
 import static org.mockito.Mockito.*;
 
+@ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
 class SelectLoanOfferServiceImplTest {
 
     @Mock
@@ -19,31 +26,52 @@ class SelectLoanOfferServiceImplTest {
     @Mock
     private StatementManagerService statementManagerService;
 
+    @Mock
+    private EmailMessageFactory emailMessageFactory;
+
+    @Mock
+    private KafkaEmailService kafkaEmailService;
+
     @InjectMocks
     private SelectLoanOfferServiceImpl selectLoanOfferService;
 
+    private LoanOfferDto loanOfferDto;
+    private LoanOfferEntity loanOfferEntity;
+    private EmailMessageDto emailMessageDto;
+
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
+        UUID statementId = UUID.randomUUID();
 
-    @AfterEach
-    void tearDown() {
-        Mockito.reset(loanOfferMapper, statementManagerService);
+        loanOfferDto = LoanOfferDto.builder()
+                .statementId(statementId)
+                .build();
+
+        loanOfferEntity = LoanOfferEntity.builder()
+                .statementId(statementId)
+                .build();
+
+        emailMessageDto = EmailMessageDto.builder()
+                .statementId(statementId)
+                .theme(EmailTheme.FINISH_REGISTRATION)
+                .address("test@example.com")
+                .text("Please finish registration")
+                .build();
     }
 
     @Test
-    void selectLoanOffer_shouldCallMapperAndManager() {
-        LoanOfferDto dto = LoanOfferDto.builder()
-                .statementId(java.util.UUID.randomUUID())
-                .build();
-        LoanOfferEntity entity = LoanOfferEntity.builder()
-                .statementId(dto.getStatementId())
-                .build();
+    void selectLoanOffer_shouldMapEntitySaveToStatementAndSendKafkaEmail() {
+        when(loanOfferMapper.toEntity(loanOfferDto)).thenReturn(loanOfferEntity);
+        when(emailMessageFactory.buildEmailMessage(loanOfferDto.getStatementId(), EmailTheme.FINISH_REGISTRATION))
+                .thenReturn(emailMessageDto);
 
-        when(loanOfferMapper.toEntity(dto)).thenReturn(entity);
-        selectLoanOfferService.selectLoanOffer(dto);
-        verify(loanOfferMapper).toEntity(dto);
-        verify(statementManagerService).selectLoanOfferToStatement(entity);
+        selectLoanOfferService.selectLoanOffer(loanOfferDto);
+
+        verify(loanOfferMapper).toEntity(loanOfferDto);
+        verify(statementManagerService).selectLoanOfferToStatement(loanOfferEntity);
+        verify(emailMessageFactory).buildEmailMessage(loanOfferDto.getStatementId(), EmailTheme.FINISH_REGISTRATION);
+        verify(kafkaEmailService).sendMessage(emailMessageDto);
+
+        verifyNoMoreInteractions(loanOfferMapper, statementManagerService, emailMessageFactory, kafkaEmailService);
     }
 }

@@ -18,6 +18,7 @@ import ru.creditservices.deal.model.enums.CalculatorErrorType;
 import ru.creditservices.deal.service.*;
 
 import java.util.UUID;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -37,7 +38,7 @@ public class CalculateFinalParametersServiceImpl implements CalculateFinalParame
 
     @Override
     @Transactional
-    public void calculateFinalParameters(String statementId, FinishRegistrationRequestDto finishRegistrationRequestDto) {
+    public void calculateFinalParameters(UUID statementId, FinishRegistrationRequestDto finishRegistrationRequestDto) {
         log.info("Calculate final parameters for statement {}", statementId);
 
         FinishRegistrationEntity finishRegistrationEntity =
@@ -52,16 +53,17 @@ public class CalculateFinalParametersServiceImpl implements CalculateFinalParame
         processCalculatorResult(calculatorResult, statementId, scoringDataEntity);
     }
 
-    private StatementEntity getAndCheckStatement(String statementId) {
-        StatementEntity statementEntity = statementManagerService.getStatementOrThrow(UUID.fromString(statementId));
-        if (statementEntity.getCredit() != null) {
-            log.error("Credit already exists for statement {}", statementId);
-            throw new CreditAlreadyExistException("Credit already exists for statement ID: " + statementId);
-        }
+    private StatementEntity getAndCheckStatement(UUID statementId) {
+        StatementEntity statementEntity = statementManagerService.getStatementOrThrow(statementId);
+        Optional.ofNullable(statementEntity.getCredit())
+                .ifPresent(credit -> {
+                    log.error("Credit already exists for statement {}", statementId);
+                    throw new CreditAlreadyExistException("Credit already exists for statement ID: " + statementId);
+                });
         return statementEntity;
     }
 
-    private void processCalculatorResult(CalculatorResult result, String statementId,
+    private void processCalculatorResult(CalculatorResult result, UUID statementId,
                                          ScoringDataEntity scoringDataEntity) {
         switch (result.type()) {
             case APPROVED -> handleApproved(result, statementId, scoringDataEntity);
@@ -70,22 +72,22 @@ public class CalculateFinalParametersServiceImpl implements CalculateFinalParame
         }
     }
 
-    private void handleApproved(CalculatorResult result, String statementId, ScoringDataEntity scoringDataEntity) {
+    private void handleApproved(CalculatorResult result, UUID statementId, ScoringDataEntity scoringDataEntity) {
         log.info("Loan approved for statement {}", statementId);
         CreditEntity creditEntity = creditMapper.toEntity(result.creditDto());
         creditManagerService.createCreditFromCreditEntity(creditEntity);
-        statementManagerService.updateStatementFromScoringData(scoringDataEntity, UUID.fromString(statementId));
-        statementManagerService.addCreditToStatement(UUID.fromString(statementId), creditEntity);
+        statementManagerService.updateStatementFromScoringData(scoringDataEntity, statementId);
+        statementManagerService.addCreditToStatement(statementId, creditEntity);
         clientManagerService.updateClientInformationFromScoringData(scoringDataEntity);
         log.debug("Final parameters calculated for statement {}", statementId);
     }
 
-    private void handleBusinessDecline(CalculatorResult result, String statementId) {
+    private void handleBusinessDecline(CalculatorResult result, UUID statementId) {
         log.info("Loan declined for statement ID {}: {}", statementId, result.businessDeclineReason());
-        statementManagerService.setLoanWaiver(UUID.fromString(statementId));
+        statementManagerService.setLoanWaiver(statementId);
     }
 
-    private void handleRequestError(CalculatorResult result, String statementId) {
+    private void handleRequestError(CalculatorResult result, UUID statementId) {
         log.warn("Validation error for statement ID {}: {}", statementId, result.requestErrorMessage());
         throw new CalculatorValidationException(
                 CalculatorErrorType.REQUEST_ERROR,

@@ -206,6 +206,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
+    @ExceptionHandler(KafkaTopicNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleKafkaTopicNotFound(KafkaTopicNotFoundException ex) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .code(HttpStatus.INTERNAL_SERVER_ERROR.name())
+                .message("Топик Kafka не найден")
+                .details(Map.of("Причина", ex.getMessage()))
+                .build();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleOtherExceptions(Exception ex) {
         ErrorResponse errorResponse = ErrorResponse.builder()

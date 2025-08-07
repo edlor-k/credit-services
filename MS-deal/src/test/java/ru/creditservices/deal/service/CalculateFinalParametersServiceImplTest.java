@@ -53,7 +53,7 @@ class CalculateFinalParametersServiceImplTest {
     @InjectMocks
     private CalculateFinalParametersServiceImpl service;
 
-    private final String statementId = UUID.randomUUID().toString();
+    private final UUID statementId = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
@@ -75,7 +75,7 @@ class CalculateFinalParametersServiceImplTest {
         CreditEntity creditEntity = mock(CreditEntity.class);
 
         when(finishRegistrationMapper.toEntity(finishDto)).thenReturn(finishEntity);
-        when(statementManagerService.getStatementOrThrow(UUID.fromString(statementId))).thenReturn(statementEntity);
+        when(statementManagerService.getStatementOrThrow(statementId)).thenReturn(statementEntity);
         when(statementEntity.getCredit()).thenReturn(null);
         when(scoringDataAssembler.assembleScoringDataEntity(statementEntity, finishEntity)).thenReturn(scoringData);
         when(scoringDataMapper.toDto(scoringData)).thenReturn(scoringDto);
@@ -85,8 +85,8 @@ class CalculateFinalParametersServiceImplTest {
         service.calculateFinalParameters(statementId, finishDto);
 
         verify(creditManagerService).createCreditFromCreditEntity(creditEntity);
-        verify(statementManagerService).updateStatementFromScoringData(scoringData, UUID.fromString(statementId));
-        verify(statementManagerService).addCreditToStatement(UUID.fromString(statementId), creditEntity);
+        verify(statementManagerService).updateStatementFromScoringData(scoringData, statementId);
+        verify(statementManagerService).addCreditToStatement(statementId, creditEntity);
         verify(clientManagerService).updateClientInformationFromScoringData(scoringData);
     }
 
@@ -103,7 +103,7 @@ class CalculateFinalParametersServiceImplTest {
         List<Violation> violations = List.of();
 
         when(finishRegistrationMapper.toEntity(finishDto)).thenReturn(finishEntity);
-        when(statementManagerService.getStatementOrThrow(UUID.fromString(statementId))).thenReturn(statementEntity);
+        when(statementManagerService.getStatementOrThrow(statementId)).thenReturn(statementEntity);
         when(statementEntity.getCredit()).thenReturn(null);
         when(scoringDataAssembler.assembleScoringDataEntity(statementEntity, finishEntity)).thenReturn(scoringData);
         when(scoringDataMapper.toDto(scoringData)).thenReturn(scoringDto);
@@ -113,7 +113,7 @@ class CalculateFinalParametersServiceImplTest {
 
         service.calculateFinalParameters(statementId, finishDto);
 
-        verify(statementManagerService).setLoanWaiver(UUID.fromString(statementId));
+        verify(statementManagerService).setLoanWaiver(statementId);
         verifyNoInteractions(creditManagerService);
         verifyNoInteractions(clientManagerService);
     }
@@ -131,7 +131,7 @@ class CalculateFinalParametersServiceImplTest {
         List<Violation> violations = List.of(new Violation("field", errorMsg));
 
         when(finishRegistrationMapper.toEntity(finishDto)).thenReturn(finishEntity);
-        when(statementManagerService.getStatementOrThrow(UUID.fromString(statementId))).thenReturn(statementEntity);
+        when(statementManagerService.getStatementOrThrow(statementId)).thenReturn(statementEntity);
         when(statementEntity.getCredit()).thenReturn(null);
         when(scoringDataAssembler.assembleScoringDataEntity(statementEntity, finishEntity)).thenReturn(scoringData);
         when(scoringDataMapper.toDto(scoringData)).thenReturn(scoringDto);
@@ -157,7 +157,7 @@ class CalculateFinalParametersServiceImplTest {
         StatementEntity statementEntity = mock(StatementEntity.class);
 
         when(finishRegistrationMapper.toEntity(finishDto)).thenReturn(finishEntity);
-        when(statementManagerService.getStatementOrThrow(UUID.fromString(statementId))).thenReturn(statementEntity);
+        when(statementManagerService.getStatementOrThrow(statementId)).thenReturn(statementEntity);
         when(statementEntity.getCredit()).thenReturn(mock(CreditEntity.class));
 
         assertThatThrownBy(() ->

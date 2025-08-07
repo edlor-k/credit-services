@@ -11,11 +11,10 @@ import org.springframework.web.bind.annotation.*;
 import ru.creditservices.deal.dto.FinishRegistrationRequestDto;
 import ru.creditservices.deal.dto.LoanOfferDto;
 import ru.creditservices.deal.dto.LoanStatementRequestDto;
-import ru.creditservices.deal.service.CalculateFinalParametersService;
-import ru.creditservices.deal.service.CreateLoanStatementService;
-import ru.creditservices.deal.service.SelectLoanOfferService;
+import ru.creditservices.deal.service.DealService;
 
 import java.util.List;
+import java.util.UUID;
 
 @Validated
 @RestController
@@ -25,48 +24,59 @@ import java.util.List;
 @Tag(name = "Deal Microservice", description = "API for managing loan deals")
 public class DealController {
 
-    private final CalculateFinalParametersService calculateFinalParametersService;
-    private final CreateLoanStatementService createLoanStatementService;
-    private final SelectLoanOfferService selectLoanOfferService;
+    private final DealService dealService;
 
     @PostMapping("/statement")
     @Operation(summary = "Create loan statement",
-            description = "Creates ClientEntity and returns a list of loan offers based on " +
-                    "the provided data from MS-calculator")
-    public ResponseEntity<List<LoanOfferDto>> createLoanStatement(
-            @Valid @RequestBody LoanStatementRequestDto loanStatementRequestDto) {
-        log.info("Create loan from data for email: {}", loanStatementRequestDto.getEmail());
-        List<LoanOfferDto> loanOfferDtoList = createLoanStatementService.getLoanOffers(loanStatementRequestDto);
-        log.debug("Loan offers: {}", loanOfferDtoList);
-        return ResponseEntity.ok(loanOfferDtoList);
+            description = "Creates ClientEntity and returns a " +
+                    "list of loan offers based on the provided data from MS-calculator")
+    public ResponseEntity<List<LoanOfferDto>> createLoanStatement(@Valid @RequestBody LoanStatementRequestDto dto) {
+        log.info("Create loan from data for email: {}", dto.getEmail());
+        return ResponseEntity.ok(dealService.createLoanStatement(dto));
     }
 
     @PostMapping("/offer/select")
     @Operation(summary = "Select loan offer to statement",
             description = "Selects a loan offer from the list of offers and saves it to the statement")
-    public ResponseEntity<Void> selectLoanOffer(
-            @Valid @RequestBody LoanOfferDto loanOfferDto
-    ) {
-        log.info("Selecting loan offer with statementId: {}", loanOfferDto.getStatementId());
-        log.debug("Selecting loan offer with data: {}", loanOfferDto);
-        selectLoanOfferService.selectLoanOffer(loanOfferDto);
-        log.info("Loan offer selected successfully for statementId: {}", loanOfferDto.getStatementId());
+    public ResponseEntity<Void> selectLoanOffer(@Valid @RequestBody LoanOfferDto dto) {
+        log.info("Selecting loan offer with statementId: {}", dto.getStatementId());
+        dealService.selectLoanOffer(dto);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/calculate/{statementId}")
     @Operation(summary = "Calculate final loan parameters",
-            description = "Calculates final loan parameters based on the selected offer and " +
-                    "additional registration data")
-    public ResponseEntity<Void> calculateFinalLoanParameters(
-            @PathVariable("statementId") String statementId,
-            @Valid @RequestBody FinishRegistrationRequestDto finishRegistrationRequestDto
-    ) {
+            description = "Calculates final loan parameters based on the selected " +
+                    "offer and additional registration data")
+    public ResponseEntity<Void> calculateFinalLoanParameters(@PathVariable("statementId") UUID statementId,
+                                                             @Valid @RequestBody FinishRegistrationRequestDto dto) {
         log.info("Calculating final loan parameters for statementId: {}", statementId);
-        log.debug("FinishRegistrationRequestDto: {}", finishRegistrationRequestDto);
-        calculateFinalParametersService.calculateFinalParameters(statementId, finishRegistrationRequestDto);
-        log.info("Final loan parameters calculated successfully for statementId: {}", statementId);
+        dealService.calculateFinalLoanParameters(statementId, dto);
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/document/{statementId}/send")
+    @Operation(summary = "Send documents to client",
+            description = "Triggers an email with document sending instructions")
+    public ResponseEntity<Void> requestToSendDocuments(@PathVariable UUID statementId) {
+        log.info("Requesting to send documents for statementId: {}", statementId);
+        dealService.sendDocuments(statementId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/document/{statementId}/sign")
+    @Operation(summary = "Ask client to sign documents", description = "Triggers an email with signing instructions")
+    public ResponseEntity<Void> requestToSignDocuments(@PathVariable UUID statementId) {
+        log.info("Requesting to sign documents for statementId: {}", statementId);
+        dealService.requestToSignDocuments(statementId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/document/{statementId}/code")
+    @Operation(summary = "Confirm document signing", description = "Sends confirmation email after signing")
+    public ResponseEntity<Void> confirmDocumentSigning(@PathVariable UUID statementId) {
+        log.info("Confirming document signing for statementId: {}", statementId);
+        dealService.confirmDocumentSigning(statementId);
+        return ResponseEntity.ok().build();
+    }
 }
