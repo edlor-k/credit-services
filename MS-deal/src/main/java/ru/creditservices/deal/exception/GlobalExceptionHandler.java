@@ -120,6 +120,37 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
+    @ExceptionHandler(InvalidStatementStatusException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidStatementStatus(InvalidStatementStatusException ex) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .code(HttpStatus.BAD_REQUEST.name())
+                .message("Передан некорректный статус заявления")
+                .details(Map.of("Причина", ex.getMessage()))
+                .build();
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    @ExceptionHandler(InvalidSesCodeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidStatementStatus(InvalidSesCodeException ex) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .code(HttpStatus.BAD_REQUEST.name())
+                .message("Передан некорректный код подтверждения")
+                .details(Map.of("Причина", ex.getMessage()))
+                .build();
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+    @ExceptionHandler(SesCodeNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidStatementStatus(SesCodeNotFoundException ex) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .code(HttpStatus.BAD_REQUEST.name())
+                .message("У заявки не обнаружен ses-код")
+                .details(Map.of("Причина", ex.getMessage()))
+                .build();
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleInvalidJson(HttpMessageNotReadableException ex) {
         String raw = ex.getMostSpecificCause().getMessage();

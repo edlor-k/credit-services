@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.*;
 import ru.creditservices.deal.dto.FinishRegistrationRequestDto;
 import ru.creditservices.deal.dto.LoanOfferDto;
 import ru.creditservices.deal.dto.LoanStatementRequestDto;
+import ru.creditservices.deal.dto.StatementDto;
 import ru.creditservices.deal.service.DealService;
+import ru.creditservices.deal.service.DocumentsService;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +27,7 @@ import java.util.UUID;
 public class DealController {
 
     private final DealService dealService;
+    private final DocumentsService documentsService;
 
     @PostMapping("/statement")
     @Operation(summary = "Create loan statement",
@@ -72,11 +75,38 @@ public class DealController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/document/{statementId}/code")
+    @PostMapping("/document/{statementId}/{code}")
     @Operation(summary = "Confirm document signing", description = "Sends confirmation email after signing")
-    public ResponseEntity<Void> confirmDocumentSigning(@PathVariable UUID statementId) {
+    public ResponseEntity<Void> confirmDocumentSigning(@PathVariable UUID statementId, @PathVariable String code) {
         log.info("Confirming document signing for statementId: {}", statementId);
-        dealService.confirmDocumentSigning(statementId);
+        dealService.confirmDocumentSigning(statementId, code);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/admin/statement")
+    @Operation(summary = "Get all statements for admin",
+            description = "Returns a list of all statements for administrative purposes")
+    public ResponseEntity<List<StatementDto>> getAllStatements() {
+        log.info("Fetching all statements for admin");
+        List<StatementDto> statements = dealService.getAllStatements();
+        return ResponseEntity.ok(statements);
+    }
+
+    @GetMapping("/admin/statement/{statementId}")
+    @Operation(summary = "Get all statements for admin",
+            description = "Returns a list of all statements for administrative purposes")
+    public ResponseEntity<StatementDto> getStatementById(@PathVariable UUID statementId) {
+        log.info("Fetching statement with id {} for admin", statementId);
+        return ResponseEntity.ok(dealService.getStatementById(statementId));
+    }
+
+    @PutMapping
+    @Operation(summary = "Update statement status",
+            description = "Updates the status of a statement by its ID")
+    public ResponseEntity<Void> updateStatementStatus(@RequestParam UUID statementId,
+                                                                   @RequestParam String status) {
+        log.info("Updating statement status for statementId: {} to status: {}", statementId, status);
+        documentsService.updateStatementStatus(statementId, status);
         return ResponseEntity.ok().build();
     }
 }

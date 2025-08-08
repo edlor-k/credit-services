@@ -41,7 +41,7 @@ public class SelectLoanOfferServiceImpl implements SelectLoanOfferService {
 
     private void notifyClientByEmail(UUID statementId) {
         EmailMessageDto emailMessage = emailMessageFactory.buildEmailMessage(statementId,
-                EmailTheme.FINISH_REGISTRATION);
+                EmailTheme.FINISH_REGISTRATION, null);
         kafkaEmailService.sendMessage(emailMessage);
         log.debug("Email notification sent for statementId={}, theme={}", statementId,
                 EmailTheme.FINISH_REGISTRATION);
