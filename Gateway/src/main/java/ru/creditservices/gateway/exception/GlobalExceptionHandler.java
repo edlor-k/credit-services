@@ -16,6 +16,7 @@ import ru.creditservices.gateway.model.enums.ErrorCode;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestControllerAdvice
 @RequiredArgsConstructor
@@ -50,13 +51,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponseDto> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
-        String message = "Ошибка чтения запроса: некорректный формат JSON.";
-        String rawMessage = ex.getMostSpecificCause() != null ?
-                ex.getMostSpecificCause().getMessage() : ex.getMessage();
+        String rawMessage = ex.getMostSpecificCause().getMessage();
 
-        if (rawMessage != null && rawMessage.contains("UUID")) {
-            message = "Некорректный формат UUID. UUID должен быть в стандартном 36-символьном формате.";
-        }
+        String message = rawMessage != null && rawMessage.contains("UUID")
+                ? "Некорректный формат UUID. UUID должен быть в стандартном 36-символьном формате."
+                : "Ошибка чтения запроса: некорректный формат JSON.";
 
         Map<String, String> details = Map.of("reason", rawMessage);
         return buildResponse(ErrorCode.JSON_PARSE_ERROR, message, details, HttpStatus.BAD_REQUEST);

@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import ru.creditservices.gateway.model.enums.CreditStatus;
 
 @Schema(description = "Информация о кредите")
 @Data
@@ -40,4 +41,7 @@ public class CreditDto {
 
     @Schema(description = "График платежей")
     private List<PaymentScheduleElementDto> paymentSchedule;
+
+    @Schema(description = "Статус кредита")
+    private CreditStatus creditStatus;
 }
