@@ -6,6 +6,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import ru.creditservices.dossier.dto.EmailMessageDto;
+import ru.creditservices.dossier.model.enums.EmailTheme;
+import ru.creditservices.dossier.service.DealRestService;
 import ru.creditservices.dossier.service.EmailService;
 
 @Component
@@ -14,6 +16,7 @@ import ru.creditservices.dossier.service.EmailService;
 public class EmailKafkaConsumer {
 
     private final EmailService emailService;
+    private final DealRestService dealRestService;
 
     @KafkaListener(
             topics = {
@@ -29,6 +32,19 @@ public class EmailKafkaConsumer {
     )
     public void listenEmailEvents(@Payload EmailMessageDto message) {
         log.info("Получено сообщение по теме {} для email={}", message.getTheme(), message.getAddress());
+
+        if (EmailTheme.CREATE_DOCUMENTS.equals(message.getTheme())) {
+            try {
+                log.info("Вызываем updateStatementStatus для statementId={} со статусом DOCUMENTS_CREATED",
+                        message.getStatementId());
+                dealRestService.updateStatementStatus(message.getStatementId(), "DOCUMENTS_CREATED");
+            } catch (Exception e) {
+                log.error("Ошибка при обновлении статуса для statementId={}: {}", message.getStatementId(),
+                        e.getMessage(), e);
+            }
+        }
+
         emailService.sendEmail(message);
+
     }
 }

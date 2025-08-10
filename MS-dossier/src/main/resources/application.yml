@@ -35,3 +35,8 @@ kafka:
     send-ses: send-ses
     credit-issued: credit-issued
     statement-denied: statement-denied
+
+external:
+  deal:
+    base-url: http://localhost:9020
+    put-path: /deal/admin/statement/{statementId}/{status}
