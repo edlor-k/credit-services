@@ -21,7 +21,7 @@ public class GatewayController implements GatewayApi {
 
     private final GatewayService gatewayService;
 
-    @PostMapping("/statements")
+    @PostMapping("/statement")
     @Override
     public ResponseEntity<List<LoanOfferDto>> fetchLoanOffers(@RequestBody LoanStatementRequestDto request) {
         log.info("Получен запрос на предложения по займу");
@@ -31,7 +31,7 @@ public class GatewayController implements GatewayApi {
         return ResponseEntity.ok(offers);
     }
 
-    @PostMapping("/statements/select")
+    @PostMapping("/statement/select")
     @Override
     public ResponseEntity<Void> selectLoanOffer(@RequestBody LoanOfferDto loanOfferDto) {
         log.info("Запрос на выбор предложения");
@@ -41,7 +41,7 @@ public class GatewayController implements GatewayApi {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/statements/registration/{statementId}")
+    @PostMapping("/statement/registration/{statementId}")
     @Override
     public ResponseEntity<Void> finishRegistration(@RequestBody FinishRegistrationRequestDto request,
                                                    @PathVariable UUID statementId) {
@@ -52,7 +52,7 @@ public class GatewayController implements GatewayApi {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/statements/{statementId}/documents")
+    @PostMapping("/document/{statementId}")
     @Override
     public ResponseEntity<Void> createDocuments(@PathVariable UUID statementId) {
         log.info("Создание документов по заявке {}", statementId);
@@ -61,7 +61,7 @@ public class GatewayController implements GatewayApi {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/statements/{statementId}/documents/sign")
+    @PostMapping("/document/{statementId}/sign")
     @Override
     public ResponseEntity<Void> signDocuments(@PathVariable UUID statementId) {
         log.info("Запрос на подписание документов по заявке {}", statementId);
@@ -70,7 +70,7 @@ public class GatewayController implements GatewayApi {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/statements/{statementId}/documents/verify/{sesCode}")
+    @PostMapping("/document/{statementId}/sign/{sesCode}")
     @Override
     public ResponseEntity<Void> verifyDocuments(@PathVariable UUID statementId,
                                                 @PathVariable String sesCode) {

@@ -7,8 +7,6 @@ import org.springframework.web.client.RestClient;
 import ru.creditservices.gateway.config.StatementServiceProperties;
 import ru.creditservices.gateway.dto.LoanOfferDto;
 import ru.creditservices.gateway.dto.LoanStatementRequestDto;
-import ru.creditservices.gateway.exception.StatementClientException;
-import ru.creditservices.gateway.model.enums.RestClientErrorType;
 import ru.creditservices.gateway.service.StatementClientService;
 
 import java.util.Arrays;
@@ -28,13 +26,12 @@ public class StatementClientServiceImpl extends BaseRestClient implements Statem
         log.info("Вызов StatementClientService: fetchLoanOffers()");
         log.debug("Тело запроса: {}", request);
         return execute(() -> Arrays.asList(Objects.requireNonNull(
-                        statementRestClient.post()
-                                .uri(statementServiceProperties.getStatementPath())
-                                .body(request)
-                                .retrieve()
-                                .body(LoanOfferDto[].class)
-                )), "fetch loan offers",
-                msg -> new StatementClientException(RestClientErrorType.REQUEST_ERROR, msg));
+                statementRestClient.post()
+                        .uri(statementServiceProperties.getStatementPath())
+                        .body(request)
+                        .retrieve()
+                        .body(LoanOfferDto[].class)
+        )), "fetch loan offers");
     }
 
     @Override
@@ -42,13 +39,12 @@ public class StatementClientServiceImpl extends BaseRestClient implements Statem
         log.info("Вызов StatementClientService: selectLoanOffer()");
         log.debug("Запроса: {}", loanOfferDto);
         execute(() -> {
-                    statementRestClient.post()
-                            .uri(statementServiceProperties.getOfferPath())
-                            .body(loanOfferDto)
-                            .retrieve()
-                            .toBodilessEntity();
-                    return null;
-                }, "select loan offer",
-                msg -> new StatementClientException(RestClientErrorType.REQUEST_ERROR, msg));
+            statementRestClient.post()
+                    .uri(statementServiceProperties.getOfferPath())
+                    .body(loanOfferDto)
+                    .retrieve()
+                    .toBodilessEntity();
+            return null;
+        }, "select loan offer");
     }
 }

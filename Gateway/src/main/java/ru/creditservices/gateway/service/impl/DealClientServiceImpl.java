@@ -7,8 +7,6 @@ import org.springframework.web.client.RestClient;
 import ru.creditservices.gateway.config.DealServiceProperties;
 import ru.creditservices.gateway.dto.FinishRegistrationRequestDto;
 import ru.creditservices.gateway.dto.StatementDto;
-import ru.creditservices.gateway.exception.StatementClientException;
-import ru.creditservices.gateway.model.enums.RestClientErrorType;
 import ru.creditservices.gateway.service.DealClientService;
 
 import java.util.Arrays;
@@ -29,79 +27,72 @@ public class DealClientServiceImpl extends BaseRestClient implements DealClientS
         log.info("Вызов DealClientService: finishRegistration (statementId = {})", statementId);
         log.debug("Тело запроса: {}", request);
         execute(() -> {
-                    dealRestClient.post()
-                            .uri(dealServiceProperties.getCalculatePath(), statementId)
-                            .body(request)
-                            .retrieve()
-                            .toBodilessEntity();
-                    return null;
-                }, "finish registration",
-                msg -> new StatementClientException(RestClientErrorType.REQUEST_ERROR, msg));
+            dealRestClient.post()
+                    .uri(dealServiceProperties.getCalculatePath(), statementId)
+                    .body(request)
+                    .retrieve()
+                    .toBodilessEntity();
+            return null;
+        }, "finish registration");
     }
 
     @Override
     public void createDocuments(UUID statementId) {
         log.info("Вызов DealClientService: createDocuments (statementId = {})", statementId);
         execute(() -> {
-                    dealRestClient.post()
-                            .uri(dealServiceProperties.getCreateDocumentsPath(), statementId)
-                            .retrieve()
-                            .toBodilessEntity();
-                    return null;
-                }, "create documents",
-                msg -> new StatementClientException(RestClientErrorType.REQUEST_ERROR, msg));
+            dealRestClient.post()
+                    .uri(dealServiceProperties.getCreateDocumentsPath(), statementId)
+                    .retrieve()
+                    .toBodilessEntity();
+            return null;
+        }, "create documents");
     }
 
     @Override
     public void signDocuments(UUID statementId) {
         log.info("Вызов DealClientService: signDocuments (statementId = {})", statementId);
         execute(() -> {
-                    dealRestClient.post()
-                            .uri(dealServiceProperties.getSignDocumentsPath(), statementId)
-                            .retrieve()
-                            .toBodilessEntity();
-                    return null;
-                }, "sign documents",
-                msg -> new StatementClientException(RestClientErrorType.REQUEST_ERROR, msg));
+            dealRestClient.post()
+                    .uri(dealServiceProperties.getSignDocumentsPath(), statementId)
+                    .retrieve()
+                    .toBodilessEntity();
+            return null;
+        }, "sign documents");
     }
 
     @Override
     public void verifyDocuments(UUID statementId, String sesCode) {
         log.info("Вызов DealClientService: verifyDocuments (statementId = {}, sesCode = {})", statementId, sesCode);
         execute(() -> {
-                    dealRestClient.post()
-                            .uri(dealServiceProperties.getVerifyDocumentsPath(), statementId, sesCode)
-                            .retrieve()
-                            .toBodilessEntity();
-                    return null;
-                }, "verify documents",
-                msg -> new StatementClientException(RestClientErrorType.REQUEST_ERROR, msg));
+            dealRestClient.post()
+                    .uri(dealServiceProperties.getVerifyDocumentsPath(), statementId, sesCode)
+                    .retrieve()
+                    .toBodilessEntity();
+            return null;
+        }, "verify documents");
     }
 
     @Override
     public List<StatementDto> fetchStatements() {
         log.info("Вызов DealClientService: fetchStatements()");
-        return execute(() -> Arrays.asList(
-                        Objects.requireNonNull(
-                                dealRestClient.get()
-                                        .uri(dealServiceProperties.getAdminGetAllStatementsPath())
-                                        .retrieve()
-                                        .body(StatementDto[].class)
-                        )
-                ), "fetch all statements",
-                msg -> new StatementClientException(RestClientErrorType.EMPTY_RESPONSE, msg));
+        return execute(() ->
+                Arrays.asList(Objects.requireNonNull(
+                        dealRestClient.get()
+                                .uri(dealServiceProperties.getAdminGetAllStatementsPath())
+                                .retrieve()
+                                .body(StatementDto[].class)
+                )), "fetch all statements");
     }
 
     @Override
     public StatementDto fetchStatementById(UUID statementId) {
         log.info("Вызов DealClientService: fetchStatementById (statementId = {})", statementId);
-        return execute(() -> Objects.requireNonNull(
+        return execute(() ->
+                Objects.requireNonNull(
                         dealRestClient.get()
                                 .uri(dealServiceProperties.getAdminGetStatementPath(), statementId)
                                 .retrieve()
                                 .body(StatementDto.class)
-                ), "fetch statement by ID",
-                msg -> new StatementClientException(RestClientErrorType.EMPTY_RESPONSE, msg));
+                ), "fetch statement by ID");
     }
-
 }

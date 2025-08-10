@@ -1,6 +1,5 @@
 package ru.creditservices.gateway.exception;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,14 +15,11 @@ import ru.creditservices.gateway.model.enums.ErrorCode;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @RestControllerAdvice
 @RequiredArgsConstructor
 @Slf4j
 public class GlobalExceptionHandler {
-
-    private final ObjectMapper objectMapper;
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseDto> handleValidation(MethodArgumentNotValidException ex) {
@@ -52,12 +48,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponseDto> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         String rawMessage = ex.getMostSpecificCause().getMessage();
-
         String message = rawMessage != null && rawMessage.contains("UUID")
                 ? "Некорректный формат UUID. UUID должен быть в стандартном 36-символьном формате."
                 : "Ошибка чтения запроса: некорректный формат JSON.";
-
-        Map<String, String> details = Map.of("reason", rawMessage);
+        Map<String, String> details = Map.of("reason", rawMessage == null ? "" : rawMessage);
         return buildResponse(ErrorCode.JSON_PARSE_ERROR, message, details, HttpStatus.BAD_REQUEST);
     }
 
@@ -66,33 +60,15 @@ public class GlobalExceptionHandler {
         return buildResponse(ErrorCode.INVALID_ARGUMENT, ex.getMessage(), null, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler({DealClientException.class, StatementClientException.class})
-    public ResponseEntity<ErrorResponseDto> handleClientExceptions(RuntimeException ex) {
-        ErrorCode code = ErrorCode.CLIENT_ERROR;
-        String message = ex.getMessage();
-        Map<String, String> details = null;
-
-        if (ex instanceof DealClientException dce) {
-            code = ErrorCode.valueOf(dce.getErrorType().name());
-            message = dce.getDetails();
-        } else if (ex instanceof StatementClientException sce) {
-            code = ErrorCode.valueOf(sce.getErrorType().name());
-            message = sce.getDetails();
-        }
-
-        if (message != null && message.trim().startsWith("{")) {
-            try {
-                ErrorResponseDto parsed = objectMapper.readValue(message, ErrorResponseDto.class);
-                code = parsed.getCode() != null ? parsed.getCode() : code;
-                message = parsed.getMessage();
-                details = parsed.getDetails();
-            } catch (Exception parseEx) {
-                log.error("Ошибка парсинга JSON в clientException", parseEx);
-                details = Map.of("error", "Не удалось распарсить вложенный JSON: " + parseEx.getMessage());
-            }
-        }
-
-        return buildResponse(code, message, details, HttpStatus.BAD_REQUEST);
+    @ExceptionHandler(GatewayClientException.class)
+    public ResponseEntity<ErrorResponseDto> handleGatewayClient(GatewayClientException ex) {
+        return ResponseEntity.status(ex.getHttpStatus()).body(
+                ErrorResponseDto.builder()
+                        .code(ex.getCode())
+                        .message(ex.getUserMessage())
+                        .details(ex.getDetails())
+                        .build()
+        );
     }
 
     @ExceptionHandler(Exception.class)
@@ -117,4 +93,3 @@ public class GlobalExceptionHandler {
         );
     }
 }
-
