@@ -13,7 +13,7 @@ external:
     calculate-path: /deal/calculate/{statementId}
     create-documents-path: /deal/document/{statementId}/send
     sign-documents-path: /deal/document/{statementId}/sign
-    verify-documents-path: /deal/document/{statementId}/code
+    verify-documents-path: /deal/document/{statementId}/{code}
     admin-get-statement-path: /deal/admin/statement/{statementId}
     admin-get-all-statements-path: /deal/admin/statement
 
