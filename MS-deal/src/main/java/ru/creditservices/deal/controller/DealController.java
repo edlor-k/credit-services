@@ -13,7 +13,6 @@ import ru.creditservices.deal.dto.LoanOfferDto;
 import ru.creditservices.deal.dto.LoanStatementRequestDto;
 import ru.creditservices.deal.dto.StatementDto;
 import ru.creditservices.deal.service.DealService;
-import ru.creditservices.deal.service.DocumentsService;
 
 import java.util.List;
 import java.util.UUID;
@@ -27,7 +26,6 @@ import java.util.UUID;
 public class DealController {
 
     private final DealService dealService;
-    private final DocumentsService documentsService;
 
     @PostMapping("/statement")
     @Operation(summary = "Create loan statement",
@@ -106,7 +104,7 @@ public class DealController {
     public ResponseEntity<Void> updateStatementStatus(@RequestParam UUID statementId,
                                                                    @RequestParam String status) {
         log.info("Updating statement status for statementId: {} to status: {}", statementId, status);
-        documentsService.updateStatementStatus(statementId, status);
+        dealService.updateStatementStatus(statementId, status);
         return ResponseEntity.ok().build();
     }
 }

@@ -20,6 +20,7 @@ public class DealServiceImpl implements DealService {
     private final SelectLoanOfferService selectLoanOfferService;
     private final DocumentsService documentsService;
     private final AdminServiceImpl adminService;
+    private final StatementManagerService statementManagerService;
 
     @Override
     public List<LoanOfferDto> createLoanStatement(LoanStatementRequestDto dto) {
@@ -29,17 +30,19 @@ public class DealServiceImpl implements DealService {
     @Override
     public void selectLoanOffer(LoanOfferDto dto) {
         selectLoanOfferService.selectLoanOffer(dto);
+        documentsService.sendFinishRegistrationRequest(dto.getStatementId());
     }
 
     @Override
     public void calculateFinalLoanParameters(UUID statementId, FinishRegistrationRequestDto dto) {
         calculateFinalParametersService.calculateFinalParameters(statementId, dto);
-        documentsService.finishRegistrationInfo(statementId);
+        documentsService.sendCreateDocumentsRequest(statementId);
     }
 
     @Override
     public void sendDocuments(UUID statementId) {
-        documentsService.prepareDocumentsForSigning(statementId);
+        statementManagerService.prepareDocuments(statementId);
+        documentsService.sendDocumentsSendInfo(statementId);
     }
 
     @Override
@@ -60,5 +63,10 @@ public class DealServiceImpl implements DealService {
     @Override
     public StatementDto getStatementById(UUID statementId) {
         return adminService.getStatementById(statementId);
+    }
+
+    @Override
+    public void updateStatementStatus(UUID statementId, String status) {
+        documentsService.updateStatementStatus(statementId, status);
     }
 }

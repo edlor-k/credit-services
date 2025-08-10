@@ -10,7 +10,7 @@ import java.util.Map;
 @Setter
 @Getter
 @Component
-@ConfigurationProperties(prefix = "kafka.topic")
+@ConfigurationProperties(prefix = "kafka")
 public class KafkaTopicProperties {
     private Map<String, String> topics;
 }

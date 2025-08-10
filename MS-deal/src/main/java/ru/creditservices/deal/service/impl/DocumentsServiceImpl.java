@@ -24,10 +24,23 @@ public class DocumentsServiceImpl implements DocumentsService {
     private final KafkaEmailService kafkaEmailService;
 
     @Override
-    public void prepareDocumentsForSigning(UUID statementId) {
-        log.info("Preparing documents for signing for statementId: {}", statementId);
-        statementManagerService.prepareDocuments(statementId);
+    public void sendFinishRegistrationRequest(UUID statementId) {
+        log.info("Sending finish registration info for statementId: {}", statementId);
+        var message = emailMessageFactory.buildEmailMessage(statementId, EmailTheme.FINISH_REGISTRATION, null);
+        kafkaEmailService.sendMessage(message);
+    }
+
+    @Override
+    public void sendCreateDocumentsRequest(UUID statementId) {
+        log.info("Sending create documents for statementId: {}", statementId);
         var message = emailMessageFactory.buildEmailMessage(statementId, EmailTheme.CREATE_DOCUMENTS, null);
+        kafkaEmailService.sendMessage(message);
+    }
+
+    @Override
+    public void sendDocumentsSendInfo(UUID statementId) {
+        log.info("Sending document send info for statementId: {}", statementId);
+        var message = emailMessageFactory.buildEmailMessage(statementId, EmailTheme.SEND_DOCUMENTS, null);
         kafkaEmailService.sendMessage(message);
     }
 
@@ -35,7 +48,7 @@ public class DocumentsServiceImpl implements DocumentsService {
     public void requestToSignDocuments(UUID statementId) {
         String sesCode = statementManagerService.generateSesCode(statementId);
         log.debug("Requesting to sign documents for statementId: {}, SES Code: {}", statementId, sesCode);
-        var message = emailMessageFactory.buildEmailMessage(statementId, EmailTheme.SEND_DOCUMENTS, sesCode);
+        var message = emailMessageFactory.buildEmailMessage(statementId, EmailTheme.SEND_SES, sesCode);
         kafkaEmailService.sendMessage(message);
     }
 
@@ -66,11 +79,5 @@ public class DocumentsServiceImpl implements DocumentsService {
         log.debug("Status updated for statementId: {}", statementId);
     }
 
-    @Override
-    public void finishRegistrationInfo(UUID statementId) {
-        log.info("Sending finish registration info for statementId: {}", statementId);
-        var message = emailMessageFactory.buildEmailMessage(statementId, EmailTheme.FINISH_REGISTRATION, null);
-        kafkaEmailService.sendMessage(message);
-    }
 
 }

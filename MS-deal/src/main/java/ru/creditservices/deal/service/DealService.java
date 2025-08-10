@@ -22,6 +22,8 @@ public interface DealService {
 
     void confirmDocumentSigning(UUID statementId, String sesCode);
 
+    void updateStatementStatus(UUID statementId, String status);
+
     List<StatementDto> getAllStatements();
 
     StatementDto getStatementById(UUID statementId);
