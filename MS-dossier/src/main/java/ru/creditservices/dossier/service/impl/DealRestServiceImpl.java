@@ -2,10 +2,11 @@ package ru.creditservices.dossier.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import ru.creditservices.dossier.config.DealServiceProperties;
 import ru.creditservices.dossier.service.DealRestService;
 
@@ -23,24 +24,27 @@ public class DealRestServiceImpl implements DealRestService {
     public void updateStatementStatus(UUID statementId, String status) {
         log.info("Sending PUT request to update statement status: statementId={}, status={}", statementId, status);
         try {
-            String url = dealServiceProperties.getBaseUrl() +
-                    dealServiceProperties.getPutPath()
-                            .replace("{statementId}", statementId.toString())
-                            .replace("{status}", status);
-
             dealRestClient
                     .put()
-                    .uri(url)
+                    .uri(uriBuilder -> uriBuilder
+                            .path(dealServiceProperties.getPutPath())
+                            .queryParam("statementId", statementId)
+                            .queryParam("status", status)
+                            .build())
                     .retrieve()
                     .toBodilessEntity();
+
             log.info("Successfully updated statement status: statementId={}, status={}", statementId, status);
-        } catch (HttpClientErrorException e) {
-            log.error("Client error while updating statement status: {}", e.getMessage(), e);
-            throw e;
-        } catch (RestClientException e) {
-            log.error("Error while sending request to Deal service: {}", e.getMessage(), e);
-            throw e;
+
+        } catch (RestClientResponseException ex) {
+            HttpStatusCode sc = ex.getStatusCode();
+            log.error("Deal service returned error {} {}: {}", sc.value(), ex.getStatusText(),
+                    ex.getResponseBodyAsString());
+            throw ex;
+
+        } catch (RestClientException ex) {
+            log.error("Error while sending request to Deal service: {}", ex.getMessage(), ex);
+            throw ex;
         }
     }
-
 }
