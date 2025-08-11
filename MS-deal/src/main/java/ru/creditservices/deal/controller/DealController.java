@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.creditservices.deal.dto.FinishRegistrationRequestDto;
 import ru.creditservices.deal.dto.LoanOfferDto;
 import ru.creditservices.deal.dto.LoanStatementRequestDto;
-import ru.creditservices.deal.dto.StatementDto;
 import ru.creditservices.deal.service.DealService;
 
 import java.util.List;
@@ -79,23 +78,6 @@ public class DealController {
         log.info("Confirming document signing for statementId: {}", statementId);
         dealService.confirmDocumentSigning(statementId, code);
         return ResponseEntity.ok().build();
-    }
-
-    @GetMapping("/admin/statement")
-    @Operation(summary = "Get all statements for admin",
-            description = "Returns a list of all statements for administrative purposes")
-    public ResponseEntity<List<StatementDto>> getAllStatements() {
-        log.info("Fetching all statements for admin");
-        List<StatementDto> statements = dealService.getAllStatements();
-        return ResponseEntity.ok(statements);
-    }
-
-    @GetMapping("/admin/statement/{statementId}")
-    @Operation(summary = "Get all statements for admin",
-            description = "Returns a list of all statements for administrative purposes")
-    public ResponseEntity<StatementDto> getStatementById(@PathVariable UUID statementId) {
-        log.info("Fetching statement with id {} for admin", statementId);
-        return ResponseEntity.ok(dealService.getStatementById(statementId));
     }
 
     @PutMapping

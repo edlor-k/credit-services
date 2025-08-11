@@ -28,6 +28,7 @@ public class StatementManagerServiceImpl implements StatementManagerService {
     private final StatementRepository statementRepository;
     private final StatusHistoryService statusHistoryService;
     private final StatementStatusValidatorService statementStatusValidatorService;
+
     @Override
     @Transactional
     public StatementEntity createStatementFromClient(ClientEntity client) {
@@ -55,9 +56,7 @@ public class StatementManagerServiceImpl implements StatementManagerService {
                     + updatedStatement.getStatementId());
         }
 
-        updatedStatement.setStatus(ApplicationStatus.APPROVED);
-        updatedStatement.setStatusHistory(
-                statusHistoryService.addStatus(updatedStatement.getStatusHistory(), ApplicationStatus.APPROVED));
+        updateStatementStatus(updatedStatement, ApplicationStatus.APPROVED);
         updatedStatement.setAppliedOffer(loanOfferEntity);
 
         statementRepository.save(updatedStatement);
@@ -72,9 +71,7 @@ public class StatementManagerServiceImpl implements StatementManagerService {
                 List.of(ApplicationStatus.APPROVED, ApplicationStatus.CC_DENIED),
                 "update from scoring data");
 
-        updatedStatement.setStatus(ApplicationStatus.CC_APPROVED);
-        updatedStatement.setStatusHistory(
-                statusHistoryService.addStatus(updatedStatement.getStatusHistory(), ApplicationStatus.CC_APPROVED));
+        updateStatementStatus(updatedStatement, ApplicationStatus.CC_APPROVED);
         statementRepository.save(updatedStatement);
         log.info("Statement status updated to CC_APPROVED: statementId={}", statementId);
     }
@@ -92,9 +89,7 @@ public class StatementManagerServiceImpl implements StatementManagerService {
     @Transactional
     public void setLoanWaiver(UUID uuid) {
         StatementEntity updatedStatement = getStatementOrThrow(uuid);
-        updatedStatement.setStatus(ApplicationStatus.CC_DENIED);
-        updatedStatement.setStatusHistory(
-                statusHistoryService.addStatus(updatedStatement.getStatusHistory(), ApplicationStatus.CC_DENIED));
+        updateStatementStatus(updatedStatement, ApplicationStatus.CC_DENIED);
         statementRepository.save(updatedStatement);
         log.warn("Loan waiver set for statementId={}", uuid);
     }
@@ -122,9 +117,7 @@ public class StatementManagerServiceImpl implements StatementManagerService {
         statementStatusValidatorService.validateStatus(statement, List.of(ApplicationStatus.CC_APPROVED),
                 "prepare documents");
 
-        statement.setStatus(ApplicationStatus.PREPARE_DOCUMENTS);
-        statement.setStatusHistory(
-                statusHistoryService.addStatus(statement.getStatusHistory(), ApplicationStatus.PREPARE_DOCUMENTS));
+        updateStatementStatus(statement, ApplicationStatus.PREPARE_DOCUMENTS);
         statementRepository.save(statement);
         log.info("Prepared documents for statementId={}", statementId);
     }
@@ -135,9 +128,7 @@ public class StatementManagerServiceImpl implements StatementManagerService {
         StatementEntity statement = getStatementOrThrow(statementId);
         String sesCode = SesCodeGeneratorUtil.generateSesCode();
         statement.setSesCode(sesCode);
-        statement.setStatus(ApplicationStatus.DOCUMENTS_CREATED);
-        statement.setStatusHistory(
-                statusHistoryService.addStatus(statement.getStatusHistory(), ApplicationStatus.DOCUMENTS_CREATED));
+        updateStatementStatus(statement, ApplicationStatus.DOCUMENTS_CREATED);
         statementRepository.save(statement);
         log.info("Generated SES code for statementId={}: {}", statementId, sesCode);
         return sesCode;
@@ -150,10 +141,7 @@ public class StatementManagerServiceImpl implements StatementManagerService {
         statementStatusValidatorService.validateStatus(updatedStatement, List.of(ApplicationStatus.DOCUMENTS_CREATED),
                 "sign documents");
 
-        updatedStatement.setStatus(ApplicationStatus.DOCUMENT_SIGNED);
-        updatedStatement.setStatusHistory(
-                statusHistoryService.addStatus(updatedStatement.getStatusHistory(),
-                        ApplicationStatus.DOCUMENTS_CREATED));
+        updateStatementStatus(updatedStatement, ApplicationStatus.DOCUMENT_SIGNED);
         statementRepository.save(updatedStatement);
         log.info("Documents signed for statementId={}", statementId);
     }
@@ -167,9 +155,7 @@ public class StatementManagerServiceImpl implements StatementManagerService {
             ApplicationStatus newStatus = ApplicationStatus.valueOf(status.toUpperCase());
             statementStatusValidatorService.validateStatus(statement, List.of(ApplicationStatus.values()),
                     "update status");
-            statement.setStatus(newStatus);
-            statement.setStatusHistory(
-                    statusHistoryService.addStatus(statement.getStatusHistory(), ApplicationStatus.DOCUMENTS_CREATED));
+            updateStatementStatus(statement, newStatus);
             statementRepository.save(statement);
             log.info("Statement status updated: statementId={}, new status={}", statementId, newStatus);
         } catch (IllegalArgumentException ex) {
@@ -187,4 +173,9 @@ public class StatementManagerServiceImpl implements StatementManagerService {
                 .build();
     }
 
+    private void updateStatementStatus(StatementEntity statement, ApplicationStatus newStatus) {
+        statement.setStatus(newStatus);
+        statement.setStatusHistory(
+                statusHistoryService.addStatus(statement.getStatusHistory(), newStatus));
+    }
 }
