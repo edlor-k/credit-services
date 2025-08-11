@@ -1,4 +1,4 @@
-package ru.creditservices.deal.service.impl;
+package ru.creditservices.deal.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,8 +10,7 @@ import ru.creditservices.deal.factory.EmailMessageFactory;
 import ru.creditservices.deal.mapper.LoanOfferMapper;
 import ru.creditservices.deal.model.entity.LoanOfferEntity;
 import ru.creditservices.deal.model.enums.EmailTheme;
-import ru.creditservices.deal.service.KafkaEmailService;
-import ru.creditservices.deal.service.StatementManagerService;
+import ru.creditservices.deal.service.impl.SelectLoanOfferServiceImpl;
 
 import java.util.UUID;
 
@@ -62,14 +61,16 @@ class SelectLoanOfferServiceImplTest {
     @Test
     void selectLoanOffer_shouldMapEntitySaveToStatementAndSendKafkaEmail() {
         when(loanOfferMapper.toEntity(loanOfferDto)).thenReturn(loanOfferEntity);
-        when(emailMessageFactory.buildEmailMessage(loanOfferDto.getStatementId(), EmailTheme.FINISH_REGISTRATION))
+        when(emailMessageFactory.buildEmailMessage(loanOfferDto.getStatementId(), EmailTheme.FINISH_REGISTRATION,
+                null))
                 .thenReturn(emailMessageDto);
 
         selectLoanOfferService.selectLoanOffer(loanOfferDto);
 
         verify(loanOfferMapper).toEntity(loanOfferDto);
         verify(statementManagerService).selectLoanOfferToStatement(loanOfferEntity);
-        verify(emailMessageFactory).buildEmailMessage(loanOfferDto.getStatementId(), EmailTheme.FINISH_REGISTRATION);
+        verify(emailMessageFactory).buildEmailMessage(loanOfferDto.getStatementId(), EmailTheme.FINISH_REGISTRATION,
+                null);
         verify(kafkaEmailService).sendMessage(emailMessageDto);
 
         verifyNoMoreInteractions(loanOfferMapper, statementManagerService, emailMessageFactory, kafkaEmailService);

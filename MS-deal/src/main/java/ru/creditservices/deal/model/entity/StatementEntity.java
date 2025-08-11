@@ -50,7 +50,7 @@ public class StatementEntity {
     private LocalDateTime signDate;
 
     @Column(name = "ses_code")
-    private String ses_code;
+    private String sesCode;
 
     @Column(name = "status_history")
     @JdbcTypeCode(SqlTypes.JSON)

@@ -6,5 +6,5 @@ import ru.creditservices.deal.model.enums.EmailTheme;
 import java.util.UUID;
 
 public interface EmailMessageFactory {
-    EmailMessageDto buildEmailMessage(UUID statementId, EmailTheme theme);
+    EmailMessageDto buildEmailMessage(UUID statementId, EmailTheme theme, String info);
 }

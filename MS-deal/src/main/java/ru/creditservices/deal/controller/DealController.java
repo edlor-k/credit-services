@@ -72,11 +72,21 @@ public class DealController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/document/{statementId}/code")
+    @PostMapping("/document/{statementId}/{code}")
     @Operation(summary = "Confirm document signing", description = "Sends confirmation email after signing")
-    public ResponseEntity<Void> confirmDocumentSigning(@PathVariable UUID statementId) {
+    public ResponseEntity<Void> confirmDocumentSigning(@PathVariable UUID statementId, @PathVariable String code) {
         log.info("Confirming document signing for statementId: {}", statementId);
-        dealService.confirmDocumentSigning(statementId);
+        dealService.confirmDocumentSigning(statementId, code);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping
+    @Operation(summary = "Update statement status",
+            description = "Updates the status of a statement by its ID")
+    public ResponseEntity<Void> updateStatementStatus(@RequestParam UUID statementId,
+                                                                   @RequestParam String status) {
+        log.info("Updating statement status for statementId: {} to status: {}", statementId, status);
+        dealService.updateStatementStatus(statementId, status);
         return ResponseEntity.ok().build();
     }
 }
