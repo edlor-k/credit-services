@@ -1,18 +1,19 @@
 package ru.creditservices.deal.controller;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import ru.creditservices.deal.dto.FinishRegistrationRequestDto;
 import ru.creditservices.deal.dto.LoanOfferDto;
 import ru.creditservices.deal.dto.LoanStatementRequestDto;
-import ru.creditservices.deal.service.CreateLoanStatementService;
-import ru.creditservices.deal.service.SelectLoanOfferService;
+import ru.creditservices.deal.service.DealService;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -21,44 +22,106 @@ import static org.mockito.Mockito.*;
 class DealControllerTest {
 
     @Mock
-    private CreateLoanStatementService createLoanStatementService;
-
-    @Mock
-    private SelectLoanOfferService selectLoanOfferService;
+    private DealService dealService;
 
     @InjectMocks
     private DealController dealController;
 
-    private LoanStatementRequestDto statementRequestDto;
-    private LoanOfferDto loanOfferDto;
-
-    @BeforeEach
-    void setUp() {
-        statementRequestDto = new LoanStatementRequestDto();
-        loanOfferDto = new LoanOfferDto();
-    }
-
     @Test
     @DisplayName("Корректное создание заявки на кредит и получение списка предложений")
     void createLoanStatementShouldReturnLoanOfferList() {
-        List<LoanOfferDto> offers = List.of(loanOfferDto, new LoanOfferDto());
-        when(createLoanStatementService.getLoanOffers(statementRequestDto)).thenReturn(offers);
+        LoanStatementRequestDto request = new LoanStatementRequestDto();
+        LoanOfferDto offer1 = new LoanOfferDto();
+        LoanOfferDto offer2 = new LoanOfferDto();
+        List<LoanOfferDto> offers = List.of(offer1, offer2);
 
-        ResponseEntity<List<LoanOfferDto>> response = dealController.createLoanStatement(statementRequestDto);
+        when(dealService.createLoanStatement(request)).thenReturn(offers);
+
+        ResponseEntity<List<LoanOfferDto>> response = dealController.createLoanStatement(request);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody()).hasSize(2);
-        verify(createLoanStatementService, times(1)).getLoanOffers(statementRequestDto);
+        assertThat(response.getBody()).containsExactly(offer1, offer2);
+        verify(dealService, times(1)).createLoanStatement(request);
     }
 
     @Test
     @DisplayName("Корректный выбор предложения по кредиту")
     void selectLoanOfferShouldCallServiceAndReturnOk() {
-        doNothing().when(selectLoanOfferService).selectLoanOffer(loanOfferDto);
+        LoanOfferDto dto = new LoanOfferDto();
 
-        ResponseEntity<Void> response = dealController.selectLoanOffer(loanOfferDto);
+        doNothing().when(dealService).selectLoanOffer(dto);
+
+        ResponseEntity<Void> response = dealController.selectLoanOffer(dto);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        verify(selectLoanOfferService, times(1)).selectLoanOffer(loanOfferDto);
+        verify(dealService, times(1)).selectLoanOffer(dto);
+    }
+
+    @Test
+    @DisplayName("Расчет финальных параметров кредита")
+    void calculateFinalLoanParametersShouldDelegateToService() {
+        UUID statementId = UUID.randomUUID();
+        FinishRegistrationRequestDto dto = new FinishRegistrationRequestDto();
+
+        doNothing().when(dealService).calculateFinalLoanParameters(statementId, dto);
+
+        ResponseEntity<Void> response = dealController.calculateFinalLoanParameters(statementId, dto);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(dealService).calculateFinalLoanParameters(statementId, dto);
+    }
+
+    @Test
+    @DisplayName("Отправка документов клиенту")
+    void requestToSendDocumentsShouldDelegateToService() {
+        UUID statementId = UUID.randomUUID();
+
+        doNothing().when(dealService).sendDocuments(statementId);
+
+        ResponseEntity<Void> response = dealController.requestToSendDocuments(statementId);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(dealService).sendDocuments(statementId);
+    }
+
+    @Test
+    @DisplayName("Запрос на подписание документов")
+    void requestToSignDocumentsShouldDelegateToService() {
+        UUID statementId = UUID.randomUUID();
+
+        doNothing().when(dealService).requestToSignDocuments(statementId);
+
+        ResponseEntity<Void> response = dealController.requestToSignDocuments(statementId);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(dealService).requestToSignDocuments(statementId);
+    }
+
+    @Test
+    @DisplayName("Подтверждение подписания документов")
+    void confirmDocumentSigningShouldDelegateToService() {
+        UUID statementId = UUID.randomUUID();
+        String code = "123456";
+
+        doNothing().when(dealService).confirmDocumentSigning(statementId, code);
+
+        ResponseEntity<Void> response = dealController.confirmDocumentSigning(statementId, code);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(dealService).confirmDocumentSigning(statementId, code);
+    }
+
+    @Test
+    @DisplayName("Обновление статуса заявки")
+    void updateStatementStatusShouldDelegateToService() {
+        UUID statementId = UUID.randomUUID();
+        String status = "DOCUMENT_SIGNED";
+
+        doNothing().when(dealService).updateStatementStatus(statementId, status);
+
+        ResponseEntity<Void> response = dealController.updateStatementStatus(statementId, status);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        verify(dealService).updateStatementStatus(statementId, status);
     }
 }
