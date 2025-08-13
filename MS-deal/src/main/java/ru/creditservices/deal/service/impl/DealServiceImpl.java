@@ -19,7 +19,7 @@ public class DealServiceImpl implements DealService {
     private final CreateLoanStatementService createLoanStatementService;
     private final SelectLoanOfferService selectLoanOfferService;
     private final DocumentsService documentsService;
-    private final AdminServiceImpl adminService;
+    private final AdminService adminService;
     private final StatementManagerService statementManagerService;
 
     @Override

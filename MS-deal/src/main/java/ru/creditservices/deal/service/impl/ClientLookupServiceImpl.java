@@ -7,6 +7,7 @@ import ru.creditservices.deal.exception.ClientNotFoundException;
 import ru.creditservices.deal.model.entity.ClientEntity;
 import ru.creditservices.deal.model.entity.StatementEntity;
 import ru.creditservices.deal.service.ClientLookupService;
+import ru.creditservices.deal.service.StatementManagerService;
 
 import java.util.UUID;
 import java.util.Optional;
@@ -16,7 +17,7 @@ import java.util.Optional;
 @Slf4j
 public class ClientLookupServiceImpl implements ClientLookupService {
 
-    private final StatementManagerServiceImpl statementManagerService;
+    private final StatementManagerService statementManagerService;
 
     @Override
     public String getEmailByStatementId(UUID statementId) {
