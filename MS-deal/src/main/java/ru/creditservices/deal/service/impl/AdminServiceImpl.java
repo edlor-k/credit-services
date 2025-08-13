@@ -7,6 +7,7 @@ import ru.creditservices.deal.dto.StatementDto;
 import ru.creditservices.deal.mapper.StatementMapper;
 import ru.creditservices.deal.model.entity.StatementEntity;
 import ru.creditservices.deal.service.AdminService;
+import ru.creditservices.deal.service.StatementManagerService;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,7 +18,7 @@ import java.util.UUID;
 public class AdminServiceImpl implements AdminService {
 
     private final StatementMapper statementMapper;
-    private final StatementManagerServiceImpl statementManagerService;
+    private final StatementManagerService statementManagerService;
 
     @Override
     public List<StatementDto> getAllStatements() {
