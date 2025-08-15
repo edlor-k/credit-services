@@ -43,9 +43,9 @@ jobs:
       - name: SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+        run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.11.0.3922:sonar \
           -Dsonar.projectKey=edlor-k_credit-services \
           -Dsonar.organization=edlor-k \
           -Dsonar.host.url=https://sonarcloud.io \
-          -Dsonar.login=${SONAR_TOKEN} \
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
           -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco-aggregate/jacoco.xml
