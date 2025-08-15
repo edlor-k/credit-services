@@ -30,7 +30,8 @@ jobs:
       - name: SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn sonar:sonar \
+        run: |
+          mvn sonar:sonar \
           -Dsonar.projectKey=edlor-k_credit-services \
           -Dsonar.organization=edlor-k \
           -Dsonar.host.url=https://sonarcloud.io \
