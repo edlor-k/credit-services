@@ -22,20 +22,7 @@ jobs:
         with:
           java-version: 21
           distribution: 'zulu'
-
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+          cache: maven
 
       - name: Build & Test with JaCoCo aggregate
         run: mvn clean verify
@@ -43,7 +30,7 @@ jobs:
       - name: SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.11.0.3922:sonar \
+        run: mvn sonar:sonar \
           -Dsonar.projectKey=edlor-k_credit-services \
           -Dsonar.organization=edlor-k \
           -Dsonar.host.url=https://sonarcloud.io \
