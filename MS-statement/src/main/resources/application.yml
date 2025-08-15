@@ -1,21 +1,3 @@
-#server:
-#  port: 9030
-#
-#spring:
-#  application:
-#    name: MS-statement
-#
-#external:
-#  deal:
-#    base-url: http://localhost:9020
-#    statement-path: /deal/statement
-#    offer-path: /deal/offer/select
-#
-#docs:
-#  title: Statement Microservice
-#  version: 0.8.0
-#  description: |
-#    This microservice is responsible for prescoring and requests to the deal microservice.
 server:
   port: 9030
 
@@ -25,7 +7,7 @@ spring:
 
 external:
   deal:
-    base-url: http://ms-deal:9020
+    base-url: http://localhost:9020
     statement-path: /deal/statement
     offer-path: /deal/offer/select
 
