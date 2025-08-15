@@ -1,3 +1,45 @@
+#server:
+#  port: 9040
+#
+#spring:
+#  application:
+#    name: MS-dossier
+#
+#  kafka:
+#    bootstrap-servers: kafka:9092
+#    consumer:
+#      group-id: dossier-group
+#      auto-offset-reset: earliest
+#      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+#      properties:
+#        spring.json.trusted.packages: '*'
+#
+#  mail:
+#    host: mailhog
+#    port: 1025
+#    username:
+#    password:
+#    properties:
+#      mail:
+#        smtp:
+#          auth: false
+#          starttls:
+#            enable: false
+#
+#kafka:
+#  topic:
+#    finish-registration: finish-registration
+#    create-documents: create-documents
+#    send-documents: send-documents
+#    send-ses: send-ses
+#    credit-issued: credit-issued
+#    statement-denied: statement-denied
+#
+#external:
+#  deal:
+#    base-url: http://ms-deal:9020
+#    put-path: /deal/admin/statement/{statementId}/{status}
 server:
   port: 9040
 
@@ -6,7 +48,7 @@ spring:
     name: MS-dossier
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: kafka:9092
     consumer:
       group-id: dossier-group
       auto-offset-reset: earliest
@@ -16,7 +58,7 @@ spring:
         spring.json.trusted.packages: '*'
 
   mail:
-    host: localhost
+    host: mailhog
     port: 1025
     username:
     password:
@@ -27,6 +69,11 @@ spring:
           starttls:
             enable: false
 
+external:
+  deal:
+    base-url: http://ms-deal:9020
+    put-path: /deal/admin/statement/{statementId}/{status}
+
 kafka:
   topic:
     finish-registration: finish-registration
@@ -35,8 +82,3 @@ kafka:
     send-ses: send-ses
     credit-issued: credit-issued
     statement-denied: statement-denied
-
-external:
-  deal:
-    base-url: http://localhost:9020
-    put-path: /deal/admin/statement/{statementId}/{status}

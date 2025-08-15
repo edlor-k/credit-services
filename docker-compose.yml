@@ -1,0 +1,179 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_DB: credit_services
+      POSTGRES_USER: neoflex_admin
+      POSTGRES_PASSWORD: qadminwerty
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - credit_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neoflex_admin -d credit_services"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - credit_net
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_log:/var/lib/zookeeper/log
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - credit_net
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
+  ms-deal:
+    build:
+      context: .
+      dockerfile: MS-deal/Dockerfile
+    container_name: ms-deal
+    ports:
+      - "9020:9020"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      ms-calculator:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/credit_services
+      SPRING_DATASOURCE_USERNAME: neoflex_admin
+      SPRING_DATASOURCE_PASSWORD: qadminwerty
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - credit_net
+    stop_grace_period: 30s
+
+  ms-statement:
+    build:
+      context: .
+      dockerfile: MS-statement/Dockerfile
+    container_name: ms-statement
+    ports:
+      - "9030:9030"
+    depends_on:
+      ms-deal:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - credit_net
+    stop_grace_period: 30s
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Gateway/Dockerfile
+    container_name: gateway
+    ports:
+      - "9000:9000"
+    depends_on:
+      ms-deal:
+        condition: service_started
+      ms-statement:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - credit_net
+    stop_grace_period: 30s
+
+  ms-calculator:
+    build:
+      context: .
+      dockerfile: MS-calculator/Dockerfile
+    container_name: ms-calculator
+    ports:
+      - "9010:9010"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - credit_net
+    stop_grace_period: 30s
+
+  ms-dossier:
+    build:
+      context: .
+      dockerfile: MS-dossier/Dockerfile
+    container_name: ms-dossier
+    ports:
+      - "9040:9040"
+    depends_on:
+      kafka:
+        condition: service_started
+      ms-deal:
+        condition: service_started
+      mailhog:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - credit_net
+    stop_grace_period: 30s
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - credit_net
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    depends_on:
+      - kafka
+      - zookeeper
+    networks:
+      - credit_net
+
+
+volumes:
+  postgres_data:
+  zookeeper_data:
+  zookeeper_log:
+  kafka_data:
+
+networks:
+  credit_net:
+    driver: bridge

@@ -1,0 +1,30 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: Gateway
+
+external:
+  deal:
+    base-url: http://ms-deal:9020
+    statement-path: /deal/statement
+    offer-path: /deal/offer/select
+    calculate-path: /deal/calculate/{statementId}
+    create-documents-path: /deal/document/{statementId}/send
+    sign-documents-path: /deal/document/{statementId}/sign
+    verify-documents-path: /deal/document/{statementId}/{code}
+    admin-get-statement-path: /deal/admin/statement/{statementId}
+    admin-get-all-statements-path: /deal/admin/statement
+
+  statement:
+    base-url: http://ms-statement:9030
+    statement-path: /statement
+    offer-path: /statement/offer
+
+docs:
+  title: Gateway API
+  version: 0.8.0
+  description: |
+    This is the API gateway for the Credit Bank.
+    It provides a unified interface for accessing services.
