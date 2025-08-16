@@ -42,9 +42,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponseDto> handleInvalidJson(HttpMessageNotReadableException ex) {
-        String raw = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : null;
+        Throwable cause = ex.getMostSpecificCause();
+        String raw = cause.getMessage();
+
         Map<String, String> details = new HashMap<>();
         details.put("error", raw != null ? raw.split("\n")[0] : "Не удалось прочитать JSON");
+
         return build(HttpStatus.BAD_REQUEST, ErrorCode.JSON_PARSE_ERROR,
                 "Некорректный формат JSON. Проверьте структуру запроса.", details);
     }
