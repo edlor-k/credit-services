@@ -26,8 +26,9 @@ jobs:
       - name: Upload coverage to Codecov (with token)
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         uses: codecov/codecov-action@v5
+        continue-on-error: true
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: target/site/jacoco-aggregate/jacoco.xml
           flags: unittests
-          fail_ci_if_error: true
+          fail_ci_if_error: false
