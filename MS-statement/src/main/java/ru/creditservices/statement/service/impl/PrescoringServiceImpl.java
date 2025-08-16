@@ -38,8 +38,10 @@ public class PrescoringServiceImpl implements PrescoringService {
         validateTerm(entity.getTerm(), errors);
         validateBirthdate(entity.getBirthdate(), errors);
         validateField(entity.getEmail(), EMAIL_PATTERN, "email", PRESCORING_EMAIL_INVALID, errors);
-        validateField(entity.getPassportSeries(), PASSPORT_SERIES_PATTERN, "passportSeries", PRESCORING_PASSPORT_SERIES_INVALID, errors);
-        validateField(entity.getPassportNumber(), PASSPORT_NUMBER_PATTERN, "passportNumber", PRESCORING_PASSPORT_NUMBER_INVALID, errors);
+        validateField(entity.getPassportSeries(), PASSPORT_SERIES_PATTERN, "passportSeries",
+                PRESCORING_PASSPORT_SERIES_INVALID, errors);
+        validateField(entity.getPassportNumber(), PASSPORT_NUMBER_PATTERN, "passportNumber",
+                PRESCORING_PASSPORT_NUMBER_INVALID, errors);
 
         if (!errors.isEmpty()) {
             log.error("Prescoring validation failed with errors: {}", errors);
