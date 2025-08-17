@@ -1,4 +1,4 @@
-name: CodeCov CI
+name: Build, Test, Coverage & Analysis
 
 on:
   push:
@@ -7,11 +7,13 @@ on:
     branches: [ develop ]
 
 jobs:
-  test-and-coverage:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -20,15 +22,26 @@ jobs:
           java-version: '21'
           cache: 'maven'
 
-      - name: Build & tests (with coverage)
-        run: mvn -B -U -T1C verify
+      - name: Build & Test (JaCoCo XML in each module)
+        run: mvn -B -U -T1C clean verify
 
-      - name: Upload coverage to Codecov (with token)
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
-        continue-on-error: true
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: target/site/jacoco-aggregate/jacoco.xml
+          files: |
+            MS-calculator/target/site/jacoco/jacoco.xml
+            MS-deal/target/site/jacoco/jacoco.xml
+            MS-statement/target/site/jacoco/jacoco.xml
           flags: unittests
-          fail_ci_if_error: false
+          fail_ci_if_error: true
+
+      - name: SonarCloud Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn sonar:sonar \
+            -Dsonar.organization=edlor-k \
+            -Dsonar.projectKey=edlor-k_creditservices \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }}
