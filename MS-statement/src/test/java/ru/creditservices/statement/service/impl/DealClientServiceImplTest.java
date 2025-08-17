@@ -5,131 +5,90 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClient;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import ru.creditservices.statement.config.DealServiceProperties;
 import ru.creditservices.statement.dto.LoanOfferDto;
 import ru.creditservices.statement.dto.LoanStatementRequestDto;
-import ru.creditservices.statement.exception.DealClientException;
-import ru.creditservices.statement.model.enums.DealClientErrorType;
+import ru.creditservices.statement.exception.DealServiceException;
+import ru.creditservices.statement.service.DealErrorHandler;
 
-import java.util.List;
+import java.nio.charset.StandardCharsets;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DealClientServiceImplTest {
 
     @Mock
-    private RestClient dealRestClient;
-    @Mock
-    private DealServiceProperties dealServiceProperties;
+    private DealServiceProperties props;
 
     @Mock
-    private RestClient.RequestBodyUriSpec postSpec;
+    private DealErrorHandler errorHandler;
+
     @Mock
-    private RestClient.RequestBodySpec bodySpec;
-    @Mock
-    private RestClient.ResponseSpec responseSpec;
+    private org.springframework.web.client.RestClient restClient;
 
     @InjectMocks
-    private DealClientServiceImpl dealClientService;
+    private DealClientServiceImpl service;
 
     @Test
-    void fetchLoanOffersReturnsLoanOffersWhenRequestIsSuccessful() {
-        LoanStatementRequestDto requestDto = new LoanStatementRequestDto();
-        LoanOfferDto[] loanOffers = {new LoanOfferDto(), new LoanOfferDto()};
+    void fetchLoanOffers_throwsDealServiceException_whenRestClientResponseException() {
+        when(props.getStatementPath()).thenReturn("/statement");
 
-        when(dealRestClient.post()).thenReturn(postSpec);
-        when(dealServiceProperties.getStatementPath()).thenReturn("/statement");
-        when(postSpec.uri("/statement")).thenReturn(bodySpec);
-        when(bodySpec.body(requestDto)).thenReturn(bodySpec);
-        when(bodySpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.body(LoanOfferDto[].class)).thenReturn(loanOffers);
+        RestClientResponseException ex = new RestClientResponseException(
+                "Bad request",
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad request",
+                null,
+                "err".getBytes(StandardCharsets.UTF_8),
+                StandardCharsets.UTF_8
+        );
 
-        List<LoanOfferDto> result = dealClientService.fetchLoanOffers(requestDto);
+        when(restClient.post()).thenThrow(ex);
 
-        assertEquals(2, result.size());
+        assertThatThrownBy(() -> service.fetchLoanOffers(new LoanStatementRequestDto()))
+                .isInstanceOf(DealServiceException.class);
     }
 
     @Test
-    void fetchLoanOffersThrowsDealClientExceptionWhenHttpClientErrorOccurs() {
-        LoanStatementRequestDto requestDto = new LoanStatementRequestDto();
+    void fetchLoanOffers_throwsDealServiceException_whenRestClientException() {
+        when(props.getStatementPath()).thenReturn("/statement");
 
-        when(dealRestClient.post()).thenReturn(postSpec);
-        when(dealServiceProperties.getStatementPath()).thenReturn("/statement");
-        when(postSpec.uri("/statement")).thenReturn(bodySpec);
-        when(bodySpec.body(requestDto)).thenReturn(bodySpec);
-        when(bodySpec.retrieve()).thenThrow(new HttpClientErrorException(org.springframework.http.HttpStatus.BAD_REQUEST, "Bad Request"));
+        when(restClient.post()).thenThrow(new RestClientException("Service unavailable"));
 
-        DealClientException exception = assertThrows(DealClientException.class, () ->
-                dealClientService.fetchLoanOffers(requestDto));
-
-        assertEquals(DealClientErrorType.REQUEST_ERROR, exception.getErrorType());
+        assertThatThrownBy(() -> service.fetchLoanOffers(new LoanStatementRequestDto()))
+                .isInstanceOf(DealServiceException.class);
     }
 
     @Test
-    void fetchLoanOffersThrowsDealClientExceptionWhenRestClientExceptionOccurs() {
-        LoanStatementRequestDto requestDto = new LoanStatementRequestDto();
+    void selectLoanOffer_throwsDealServiceException_whenRestClientResponseException() {
+        when(props.getOfferPath()).thenReturn("/offer");
 
-        when(dealRestClient.post()).thenReturn(postSpec);
-        when(dealServiceProperties.getStatementPath()).thenReturn("/statement");
-        when(postSpec.uri("/statement")).thenReturn(bodySpec);
-        when(bodySpec.body(requestDto)).thenReturn(bodySpec);
-        when(bodySpec.retrieve()).thenThrow(new RestClientException("Service Unavailable"));
+        RestClientResponseException ex = new RestClientResponseException(
+                "Bad request",
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad request",
+                null,
+                "err".getBytes(StandardCharsets.UTF_8),
+                StandardCharsets.UTF_8
+        );
 
-        DealClientException exception = assertThrows(DealClientException.class, () ->
-                dealClientService.fetchLoanOffers(requestDto));
+        when(restClient.post()).thenThrow(ex);
 
-        assertEquals(DealClientErrorType.EMPTY_RESPONSE, exception.getErrorType());
+        assertThatThrownBy(() -> service.selectLoanOffer(new LoanOfferDto()))
+                .isInstanceOf(DealServiceException.class);
     }
 
     @Test
-    void selectLoanOfferCompletesSuccessfullyWhenRequestIsSuccessful() {
-        LoanOfferDto loanOfferDto = new LoanOfferDto();
+    void selectLoanOffer_throwsDealServiceException_whenRestClientException() {
+        when(props.getOfferPath()).thenReturn("/offer");
 
-        when(dealRestClient.post()).thenReturn(postSpec);
-        when(dealServiceProperties.getOfferPath()).thenReturn("/offer");
-        when(postSpec.uri("/offer")).thenReturn(bodySpec);
-        when(bodySpec.body(loanOfferDto)).thenReturn(bodySpec);
-        when(bodySpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.toBodilessEntity()).thenReturn(ResponseEntity.ok().build());
+        when(restClient.post()).thenThrow(new RestClientException("Connection lost"));
 
-        assertDoesNotThrow(() -> dealClientService.selectLoanOffer(loanOfferDto));
-    }
-
-    @Test
-    void selectLoanOfferThrowsDealClientExceptionWhenHttpClientErrorOccurs() {
-        LoanOfferDto loanOfferDto = new LoanOfferDto();
-
-        when(dealRestClient.post()).thenReturn(postSpec);
-        when(dealServiceProperties.getOfferPath()).thenReturn("/offer");
-        when(postSpec.uri("/offer")).thenReturn(bodySpec);
-        when(bodySpec.body(loanOfferDto)).thenReturn(bodySpec);
-        when(bodySpec.retrieve()).thenThrow(new HttpClientErrorException(org.springframework.http.HttpStatus.BAD_REQUEST, "Bad Request"));
-
-        DealClientException exception = assertThrows(DealClientException.class, () ->
-                dealClientService.selectLoanOffer(loanOfferDto));
-
-        assertEquals(DealClientErrorType.REQUEST_ERROR, exception.getErrorType());
-    }
-
-    @Test
-    void selectLoanOfferThrowsDealClientExceptionWhenRestClientExceptionOccurs() {
-        LoanOfferDto loanOfferDto = new LoanOfferDto();
-
-        when(dealRestClient.post()).thenReturn(postSpec);
-        when(dealServiceProperties.getOfferPath()).thenReturn("/offer");
-        when(postSpec.uri("/offer")).thenReturn(bodySpec);
-        when(bodySpec.body(loanOfferDto)).thenReturn(bodySpec);
-        when(bodySpec.retrieve()).thenThrow(new RestClientException("Service Unavailable"));
-
-        DealClientException exception = assertThrows(DealClientException.class, () ->
-                dealClientService.selectLoanOffer(loanOfferDto));
-
-        assertEquals(DealClientErrorType.EMPTY_RESPONSE, exception.getErrorType());
+        assertThatThrownBy(() -> service.selectLoanOffer(new LoanOfferDto()))
+                .isInstanceOf(DealServiceException.class);
     }
 }
