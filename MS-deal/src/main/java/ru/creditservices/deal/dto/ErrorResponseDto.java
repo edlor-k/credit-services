@@ -1,10 +1,10 @@
-package ru.creditservices.statement.dto;
+package ru.creditservices.deal.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.creditservices.statement.model.enums.ErrorCode;
+import ru.creditservices.deal.model.enums.ErrorCode;
 
 import java.util.Map;
 

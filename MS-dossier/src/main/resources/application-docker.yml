@@ -6,7 +6,7 @@ spring:
     name: MS-dossier
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: kafka:9092
     consumer:
       group-id: dossier-group
       auto-offset-reset: earliest
@@ -27,6 +27,11 @@ spring:
           starttls:
             enable: false
 
+external:
+  deal:
+    base-url: http://ms-deal:9020
+    put-path: /deal/admin/statement/{statementId}/{status}
+
 kafka:
   topic:
     finish-registration: finish-registration
@@ -35,8 +40,3 @@ kafka:
     send-ses: send-ses
     credit-issued: credit-issued
     statement-denied: statement-denied
-
-external:
-  deal:
-    base-url: http://localhost:9020
-    put-path: /deal/admin/statement/{statementId}/{status}

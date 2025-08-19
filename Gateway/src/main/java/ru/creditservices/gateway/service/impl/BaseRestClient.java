@@ -36,36 +36,37 @@ public abstract class BaseRestClient {
             log.warn("HTTP ошибка от внешнего сервиса при {} ({} {}): {}",
                     context, statusCode.value(), ex.getStatusText(), body);
 
+            // Если внешка вернула нормальный ErrorResponseDto -> пробрасываем его как есть
             ErrorResponseDto parsed = tryParse(body);
             if (parsed != null) {
-                throw new GatewayClientException(
-                        parsed.getCode() != null ? parsed.getCode() : ErrorCode.CLIENT_ERROR,
-                        parsed.getMessage() != null ? parsed.getMessage() : "Внешний сервис вернул ошибку",
-                        parsed.getDetails(),
-                        httpStatus
-                );
+                throw new GatewayClientException(parsed, httpStatus);
             }
 
+            // Если не смогли распарсить JSON -> формируем fallback
             throw new GatewayClientException(
-                    ErrorCode.CLIENT_ERROR,
-                    "Внешний сервис вернул ошибку",
-                    Map.of(
-                            "context", context,
-                            "httpStatus", String.valueOf(statusCode.value()),
-                            "statusText", ex.getStatusText() == null ? "" : ex.getStatusText()
-                    ),
+                    ErrorResponseDto.builder()
+                            .code(ErrorCode.CLIENT_ERROR)
+                            .message("Внешний сервис вернул ошибку")
+                            .details(Map.of(
+                                    "context", context,
+                                    "httpStatus", String.valueOf(statusCode.value()),
+                                    "statusText", ex.getStatusText() == null ? "" : ex.getStatusText()
+                            ))
+                            .build(),
                     httpStatus
             );
 
         } catch (RestClientException ex) {
             log.error("Внешний сервис недоступен при {}: {}", context, ex.getMessage());
             throw new GatewayClientException(
-                    ErrorCode.CLIENT_ERROR,
-                    "Внешний сервис недоступен",
-                    Map.of(
-                            "context", context,
-                            "reason", ex.getMessage() == null ? "" : ex.getMessage()
-                    ),
+                    ErrorResponseDto.builder()
+                            .code(ErrorCode.CLIENT_ERROR)
+                            .message("Внешний сервис недоступен")
+                            .details(Map.of(
+                                    "context", context,
+                                    "reason", ex.getMessage() == null ? "" : ex.getMessage()
+                            ))
+                            .build(),
                     HttpStatus.SERVICE_UNAVAILABLE
             );
         }

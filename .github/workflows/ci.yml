@@ -1,0 +1,48 @@
+name: Build, Test, Coverage & Analysis
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Build & Test (generate JaCoCo XML in each module)
+        run: mvn -B -U -T1C clean verify
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: |
+            MS-calculator/target/site/jacoco/jacoco.xml
+            MS-deal/target/site/jacoco/jacoco.xml
+            MS-statement/target/site/jacoco/jacoco.xml
+          flags: unittests
+          fail_ci_if_error: true
+
+      - name: SonarCloud Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar \
+            -Dsonar.projectKey=edlor-k_credit-services \
+            -Dsonar.organization=edlor-k \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.coverage.jacoco.xmlReportPaths=MS-calculator/target/site/jacoco/jacoco.xml,MS-deal/target/site/jacoco/jacoco.xml,MS-statement/target/site/jacoco/jacoco.xml

@@ -4,9 +4,8 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.creditservices.deal.dto.*;
-import ru.creditservices.deal.exception.CalculatorValidationException;
-import ru.creditservices.deal.exception.CreditAlreadyExistException;
+import ru.creditservices.deal.dto.CreditDto;
+import ru.creditservices.deal.dto.FinishRegistrationRequestDto;
 import ru.creditservices.deal.mapper.CreditMapper;
 import ru.creditservices.deal.mapper.FinishRegistrationMapper;
 import ru.creditservices.deal.mapper.ScoringDataMapper;
@@ -14,11 +13,11 @@ import ru.creditservices.deal.model.entity.CreditEntity;
 import ru.creditservices.deal.model.entity.FinishRegistrationEntity;
 import ru.creditservices.deal.model.entity.ScoringDataEntity;
 import ru.creditservices.deal.model.entity.StatementEntity;
-import ru.creditservices.deal.model.enums.CalculatorErrorType;
+import ru.creditservices.deal.exception.CreditAlreadyExistException;
 import ru.creditservices.deal.service.*;
 
-import java.util.UUID;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -48,9 +47,10 @@ public class CalculateFinalParametersServiceImpl implements CalculateFinalParame
         ScoringDataEntity scoringDataEntity = scoringDataAssembler
                 .assembleScoringDataEntity(statementEntity, finishRegistrationEntity);
 
-        CalculatorResult calculatorResult = calculatorClientService.fetchCalculatorResult(
+        CreditDto creditDto = calculatorClientService.fetchCalculatorResult(
                 scoringDataMapper.toDto(scoringDataEntity));
-        processCalculatorResult(calculatorResult, statementId, scoringDataEntity);
+
+        handleApproved(creditDto, statementId, scoringDataEntity);
     }
 
     private StatementEntity getAndCheckStatement(UUID statementId) {
@@ -63,35 +63,13 @@ public class CalculateFinalParametersServiceImpl implements CalculateFinalParame
         return statementEntity;
     }
 
-    private void processCalculatorResult(CalculatorResult result, UUID statementId,
-                                         ScoringDataEntity scoringDataEntity) {
-        switch (result.type()) {
-            case APPROVED -> handleApproved(result, statementId, scoringDataEntity);
-            case BUSINESS_DECLINE -> handleBusinessDecline(result, statementId);
-            case REQUEST_ERROR -> handleRequestError(result, statementId);
-        }
-    }
-
-    private void handleApproved(CalculatorResult result, UUID statementId, ScoringDataEntity scoringDataEntity) {
+    private void handleApproved(CreditDto creditDto, UUID statementId, ScoringDataEntity scoringDataEntity) {
         log.info("Loan approved for statement {}", statementId);
-        CreditEntity creditEntity = creditMapper.toEntity(result.creditDto());
+        CreditEntity creditEntity = creditMapper.toEntity(creditDto);
         creditManagerService.createCreditFromCreditEntity(creditEntity);
         statementManagerService.updateStatementFromScoringData(scoringDataEntity, statementId);
         statementManagerService.addCreditToStatement(statementId, creditEntity);
         clientManagerService.updateClientInformationFromScoringData(scoringDataEntity);
         log.debug("Final parameters calculated for statement {}", statementId);
-    }
-
-    private void handleBusinessDecline(CalculatorResult result, UUID statementId) {
-        log.info("Loan declined for statement ID {}: {}", statementId, result.businessDeclineReason());
-        statementManagerService.setLoanWaiver(statementId);
-    }
-
-    private void handleRequestError(CalculatorResult result, UUID statementId) {
-        log.warn("Validation error for statement ID {}: {}", statementId, result.requestErrorMessage());
-        throw new CalculatorValidationException(
-                CalculatorErrorType.REQUEST_ERROR,
-                result.violations()
-        );
     }
 }

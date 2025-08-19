@@ -62,13 +62,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(GatewayClientException.class)
     public ResponseEntity<ErrorResponseDto> handleGatewayClient(GatewayClientException ex) {
-        return ResponseEntity.status(ex.getHttpStatus()).body(
-                ErrorResponseDto.builder()
-                        .code(ex.getCode())
-                        .message(ex.getUserMessage())
-                        .details(ex.getDetails())
-                        .build()
-        );
+        return ResponseEntity.status(ex.getHttpStatus()).body(ex.getErrorResponse());
     }
 
     @ExceptionHandler(Exception.class)

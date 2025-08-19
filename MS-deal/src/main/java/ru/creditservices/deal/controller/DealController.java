@@ -79,14 +79,4 @@ public class DealController {
         dealService.confirmDocumentSigning(statementId, code);
         return ResponseEntity.ok().build();
     }
-
-    @PutMapping
-    @Operation(summary = "Update statement status",
-            description = "Updates the status of a statement by its ID")
-    public ResponseEntity<Void> updateStatementStatus(@RequestParam UUID statementId,
-                                                                   @RequestParam String status) {
-        log.info("Updating statement status for statementId: {} to status: {}", statementId, status);
-        dealService.updateStatementStatus(statementId, status);
-        return ResponseEntity.ok().build();
-    }
 }

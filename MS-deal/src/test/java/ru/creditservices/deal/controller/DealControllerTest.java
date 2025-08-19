@@ -110,18 +110,4 @@ class DealControllerTest {
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         verify(dealService).confirmDocumentSigning(statementId, code);
     }
-
-    @Test
-    @DisplayName("Обновление статуса заявки")
-    void updateStatementStatusShouldDelegateToService() {
-        UUID statementId = UUID.randomUUID();
-        String status = "DOCUMENT_SIGNED";
-
-        doNothing().when(dealService).updateStatementStatus(statementId, status);
-
-        ResponseEntity<Void> response = dealController.updateStatementStatus(statementId, status);
-
-        assertThat(response.getStatusCode().value()).isEqualTo(200);
-        verify(dealService).updateStatementStatus(statementId, status);
-    }
 }

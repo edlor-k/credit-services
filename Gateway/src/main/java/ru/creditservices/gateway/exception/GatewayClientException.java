@@ -2,25 +2,17 @@ package ru.creditservices.gateway.exception;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
-import ru.creditservices.gateway.model.enums.ErrorCode;
-
-import java.util.Map;
+import ru.creditservices.gateway.dto.ErrorResponseDto;
 
 @Getter
 public class GatewayClientException extends RuntimeException {
-    private final ErrorCode code;
-    private final String userMessage;
-    private final Map<String, String> details;
+
+    private final ErrorResponseDto errorResponse;
     private final HttpStatus httpStatus;
 
-    public GatewayClientException(ErrorCode code,
-                                  String userMessage,
-                                  Map<String, String> details,
-                                  HttpStatus httpStatus) {
-        super(userMessage);
-        this.code = code;
-        this.userMessage = userMessage;
-        this.details = details;
+    public GatewayClientException(ErrorResponseDto errorResponse, HttpStatus httpStatus) {
+        super(errorResponse != null ? errorResponse.getMessage() : null);
+        this.errorResponse = errorResponse;
         this.httpStatus = httpStatus;
     }
 }
